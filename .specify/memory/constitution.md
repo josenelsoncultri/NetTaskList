@@ -1,10 +1,9 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 1.1.0
-- List of modified principles:
-  - PRINCIPLE_5: V. Tool Packaging & Distribution (.NET Global Tool - nxtl) (explicit src/ placement constraint)
+- Version change: 1.1.0 → 1.2.0
+- List of modified principles: None
 - Added sections:
-  - Project Structure & Directory Layout (under Architecture & Technology Constraints)
+  - Branch Isolation & PR-Driven Integration (under Development Workflow & Quality Gates)
 - Removed sections: None
 - Follow-up TODOs: None
 -->
@@ -58,9 +57,11 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
 
 ## Development Workflow & Quality Gates
 
+- **Branch Isolation**: Every new feature, specification, or bugfix MUST be developed on a dedicated git branch created from `main`. Direct commits or pushes to the `main` branch are strictly prohibited.
+- **PR-Driven Integration & CI/CD Triggers**: Code integration into `main` MUST occur exclusively through Pull Requests (PRs). Merging a PR into `main` serves as the official trigger for automated GitHub Actions workflows (e.g., CI verification, test suites, packaging, and release/publish pipelines).
 - **Conventional Commits**: All commit messages MUST strictly adhere to the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
-- **Continuous Verification**: Changes must compile with zero warnings and pass 100% of unit tests before committing.
-- **Review Compliance**: Every Pull Request or code contribution must be reviewed against these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), and dependency justification.
+- **Continuous Verification**: Changes must compile with zero warnings and pass 100% of unit tests before committing or merging.
+- **Review Compliance**: Every Pull Request or code contribution must be reviewed against these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), dependency justification, and automated workflow triggers.
 
 ## Governance
 
@@ -71,4 +72,4 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
   - **PATCH**: Clarifications, wording adjustments, or non-semantic corrections.
 - All feature specifications (`spec.md`), architectural plans (`plan.md`), and task lists (`tasks.md`) produced across Spec Kit workflows MUST maintain strict compliance with this Constitution.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-30
+**Version**: 1.2.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-31
