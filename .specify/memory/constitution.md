@@ -1,16 +1,10 @@
 <!--
 Sync Impact Report:
-- Version change: initial scaffold → 1.0.0
+- Version change: 1.0.0 → 1.1.0
 - List of modified principles:
-  - PRINCIPLE_1: I. Rich Terminal UX (Spectre.Console & Localization)
-  - PRINCIPLE_2: II. Declarative Script Configuration (JSON / YAML)
-  - PRINCIPLE_3: III. Test-First & Mandatory Unit Test Coverage
-  - PRINCIPLE_4: IV. Minimal Dependencies & Explicit Justification
-  - PRINCIPLE_5: V. Tool Packaging & Distribution (.NET Global Tool - nxtl)
+  - PRINCIPLE_5: V. Tool Packaging & Distribution (.NET Global Tool - nxtl) (explicit src/ placement constraint)
 - Added sections:
-  - Architecture & Technology Constraints
-  - Development Workflow & Quality Gates
-  - Governance
+  - Project Structure & Directory Layout (under Architecture & Technology Constraints)
 - Removed sections: None
 - Follow-up TODOs: None
 -->
@@ -44,12 +38,17 @@ The project maintains a lean dependency tree.
 ### V. Tool Packaging & Distribution (.NET Global Tool - nxtl)
 The project MUST be packaged and distributed as a modern .NET CLI tool.
 - The project MUST target .NET 10 (`net10.0`), utilizing the latest installed .NET version.
+- The production tool project MUST reside within the `src/` directory at the repository root (e.g., `src/NetTaskList/NetTaskList.csproj`).
 - The project `.csproj` MUST be configured as a packable tool (`<PackAsTool>true</PackAsTool>`).
 - The executable command name MUST be configured as `nxtl` (`<ToolCommandName>nxtl</ToolCommandName>`), enabling global invocation directly from the terminal.
 
 ## Architecture & Technology Constraints
 
 - **Platform & Runtime**: .NET 10 (`net10.0`) C#.
+- **Project Structure & Directory Layout**:
+  - All production application source code and `.csproj` files MUST reside within the `src/` directory at the repository root (e.g., `src/NetTaskList/`).
+  - Unit and integration test projects MUST reside within the `tests/` directory at the repository root (e.g., `tests/NetTaskList.Tests/`).
+  - No application code, project files, or source files may be placed directly at the repository root level.
 - **Terminal UI**: `Spectre.Console` as the sole interactive terminal UI framework.
 - **Serialization**: Native `System.Text.Json` or a lightweight, justified YAML parser (e.g., `YamlDotNet` if YAML support is implemented).
 - **Architectural Separation**: Strict separation between:
@@ -61,7 +60,7 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
 
 - **Conventional Commits**: All commit messages MUST strictly adhere to the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
 - **Continuous Verification**: Changes must compile with zero warnings and pass 100% of unit tests before committing.
-- **Review Compliance**: Every Pull Request or code contribution must be reviewed against these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI) and dependency justification.
+- **Review Compliance**: Every Pull Request or code contribution must be reviewed against these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), and dependency justification.
 
 ## Governance
 
@@ -72,4 +71,4 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
   - **PATCH**: Clarifications, wording adjustments, or non-semantic corrections.
 - All feature specifications (`spec.md`), architectural plans (`plan.md`), and task lists (`tasks.md`) produced across Spec Kit workflows MUST maintain strict compliance with this Constitution.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-30
+**Version**: 1.1.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-30
