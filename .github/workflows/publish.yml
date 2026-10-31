@@ -1,0 +1,86 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão do pacote (ex: 1.0.1). Se omitido, usa a versão da release ou do .csproj.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write # Obrigatório para autenticação OIDC (Trusted Publishing)
+
+jobs:
+  publish:
+    name: Build, Test & Publish
+    runs-on: ubuntu-latest
+    # Se você configurou um Environment no NuGet.org (opcional), descomente a linha abaixo:
+    # environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Extrair / Definir Versão do Pacote
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "Usando versão informada manualmente: ${{ inputs.version }}"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            # Remove o prefixo 'v' se existir (ex: v1.0.0 -> 1.0.0)
+            CLEAN_VERSION="${TAG#v}"
+            echo "version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
+            echo "Usando versão extraída da release: $CLEAN_VERSION"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "Usando versão padrão definida no .csproj"
+          fi
+
+      - name: Restaurar dependências
+        run: dotnet restore NetTaskList.sln
+
+      - name: Compilar solução
+        run: |
+          if [ -n "${{ steps.version.outputs.version }}" ]; then
+            dotnet build NetTaskList.sln --configuration Release -p:Version="${{ steps.version.outputs.version }}" --no-restore
+          else
+            dotnet build NetTaskList.sln --configuration Release --no-restore
+          fi
+
+      - name: Executar testes
+        run: dotnet test NetTaskList.sln --configuration Release --no-build --verbosity normal
+
+      - name: Empacotar ferramenta (dotnet tool)
+        run: |
+          if [ -n "${{ steps.version.outputs.version }}" ]; then
+            dotnet pack src/NetTaskList/NetTaskList.csproj --configuration Release --no-build --output ./nupkg -p:PackageVersion="${{ steps.version.outputs.version }}"
+          else
+            dotnet pack src/NetTaskList/NetTaskList.csproj --configuration Release --no-build --output ./nupkg
+          fi
+
+      - name: Autenticar no NuGet via OIDC (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          # Substitua 'josenelsoncultri' pelo seu nome de usuário/organização no NuGet.org
+          # ou crie a variável em Settings > Secrets and variables > Actions > Variables: NUGET_USERNAME
+          user: ${{ vars.NUGET_USERNAME || 'josenelsoncultri' }}
+
+      - name: Publicar pacote no NuGet.org
+        run: |
+          dotnet nuget push ./nupkg/*.nupkg \
+            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
