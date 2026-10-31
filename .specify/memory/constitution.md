@@ -1,10 +1,12 @@
 <!--
 Sync Impact Report:
-- Version change: 1.1.0 → 1.2.0
+- Version change: 1.2.0 → 2.0.0
 - List of modified principles: None
-- Added sections:
-  - Branch Isolation & PR-Driven Integration (under Development Workflow & Quality Gates)
-- Removed sections: None
+- Added sections: None
+- Removed sections:
+  - Branch Isolation (under Development Workflow & Quality Gates)
+- Modified sections:
+  - Development Workflow & Quality Gates: Removed the requirement for mandatory branch isolation and Pull Requests; defined deployment and package publishing via GitHub Actions workflow (`publish.yml`).
 - Follow-up TODOs: None
 -->
 
@@ -57,11 +59,11 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
 
 ## Development Workflow & Quality Gates
 
-- **Branch Isolation**: Every new feature, specification, or bugfix MUST be developed on a dedicated git branch created from `main`. Direct commits or pushes to the `main` branch are strictly prohibited.
-- **PR-Driven Integration & CI/CD Triggers**: Code integration into `main` MUST occur exclusively through Pull Requests (PRs). Merging a PR into `main` serves as the official trigger for automated GitHub Actions workflows (e.g., CI verification, test suites, packaging, and release/publish pipelines).
+- **Workflow & Branch Flexibility**: Branch isolation is not mandatory. Developers MAY commit and push directly to `main` or use branches according to project needs without requiring dedicated feature branches or mandatory Pull Requests.
+- **Automated Deployment via GitHub Actions**: Package building, validation, and deployment (publishing to NuGet) are governed and executed via the official GitHub Actions workflow (`.github/workflows/publish.yml`) using NuGet Trusted Publishing (OIDC). Publishing is triggered by published GitHub Releases or manual execution via `workflow_dispatch`.
 - **Conventional Commits**: All commit messages MUST strictly adhere to the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
-- **Continuous Verification**: Changes must compile with zero warnings and pass 100% of unit tests before committing or merging.
-- **Review Compliance**: Every Pull Request or code contribution must be reviewed against these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), dependency justification, and automated workflow triggers.
+- **Continuous Verification**: Changes must compile with zero warnings and pass 100% of unit tests (`dotnet test`) before deployment.
+- **Review & Quality Compliance**: All contributions must adhere to these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), dependency justification, and automated workflow deployment.
 
 ## Governance
 
@@ -72,4 +74,4 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
   - **PATCH**: Clarifications, wording adjustments, or non-semantic corrections.
 - All feature specifications (`spec.md`), architectural plans (`plan.md`), and task lists (`tasks.md`) produced across Spec Kit workflows MUST maintain strict compliance with this Constitution.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-31
+**Version**: 2.0.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-31
