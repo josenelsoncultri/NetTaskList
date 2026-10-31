@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/nettasklist/nxtl/main/schemas/nxtl-v1.schema.json",
+  "title": "NetTaskList (nxtl) Configuration Schema",
+  "description": "Arquivo de configuração declarativa de scripts e tarefas para a ferramenta nxtl.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "URI do JSON Schema para validação e intellisense no editor."
+    },
+    "scripts": {
+      "type": "array",
+      "description": "Lista de tarefas e comandos executáveis configurados para o projeto.",
+      "items": {
+        "$ref": "#/$defs/scriptTask"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Alias alternativo para scripts.",
+      "items": {
+        "$ref": "#/$defs/scriptTask"
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["scripts"] },
+    { "required": ["tasks"] }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "scriptTask": {
+      "type": "object",
+      "title": "ScriptTask",
+      "description": "Definição de uma tarefa executável.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identificador único e amigável da tarefa (ex: 'build', 'teste', 'gerar-docs').",
+          "examples": ["build", "test", "watch", "seed-db"]
+        },
+        "command": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Comando do sistema operacional ou caminho de script C# a ser executado.",
+          "examples": ["dotnet build", "dotnet test", "scripts/clean.cs"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["tool", "csharp"],
+          "default": "tool",
+          "description": "Categoria da tarefa: 'tool' para ferramentas CLI comuns ou 'csharp' para scripts C# file-scoped."
+        },
+        "description": {
+          "type": "string",
+          "description": "Descrição amigável da tarefa para exibição na tabela interativa do terminal."
+        }
+      },
+      "required": ["name", "command"],
+      "additionalProperties": false
+    }
+  }
+}

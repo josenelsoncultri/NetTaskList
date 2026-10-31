@@ -17,10 +17,10 @@
 
 **Purpose**: Inicialização da solução, configuração dos projetos .NET 10, dependências e esquemas.
 
-- [ ] T001 Initialize solution and create project folders for `src/NetTaskList/` and `tests/NetTaskList.Tests/` targeting net10.0 per plan.md
-- [ ] T002 Configure `src/NetTaskList/NetTaskList.csproj` with Native AOT (`<PublishAot>true</PublishAot>`), tool packaging (`<PackAsTool>true</PackAsTool>`, `<ToolCommandName>nxtl</ToolCommandName>`), and dependency `Spectre.Console`
-- [ ] T003 [P] Configure `tests/NetTaskList.Tests/NetTaskList.Tests.csproj` with xUnit, Microsoft.NET.Test.Sdk, and project reference to `src/NetTaskList/NetTaskList.csproj`
-- [ ] T004 [P] Create formal JSON Schema specification file in `src/NetTaskList/schemas/nxtl-v1.schema.json` based on contracts/config-schema.json
+- [X] T001 Initialize solution and create project folders for `src/NetTaskList/` and `tests/NetTaskList.Tests/` targeting net10.0 per plan.md
+- [X] T002 Configure `src/NetTaskList/NetTaskList.csproj` with Native AOT (`<PublishAot>true</PublishAot>`), tool packaging (`<PackAsTool>true</PackAsTool>`, `<ToolCommandName>nxtl</ToolCommandName>`), and dependency `Spectre.Console`
+- [X] T003 [P] Configure `tests/NetTaskList.Tests/NetTaskList.Tests.csproj` with xUnit, Microsoft.NET.Test.Sdk, and project reference to `src/NetTaskList/NetTaskList.csproj`
+- [X] T004 [P] Create formal JSON Schema specification file in `src/NetTaskList/schemas/nxtl-v1.schema.json` based on contracts/config-schema.json
 
 ---
 
@@ -30,13 +30,13 @@
 
 **⚠️ CRITICAL**: Nenhuma história de usuário pode ser iniciada antes da conclusão desta fase.
 
-- [ ] T005 [P] Create `TaskType` enum (`Tool`, `CSharp`) in `src/NetTaskList/Domain/Models/TaskType.cs`
-- [ ] T006 [P] Create `ScriptTask` domain model (`Name`, `Command`, `Type`, `Description`, `ResolveExecutionCommand()`) in `src/NetTaskList/Domain/Models/ScriptTask.cs`
-- [ ] T007 [P] Create `TaskConfiguration` domain aggregate in `src/NetTaskList/Domain/Models/TaskConfiguration.cs`
-- [ ] T008 [P] Create `ValidationResult` and `ValidationError` models in `src/NetTaskList/Domain/Validation/ValidationResult.cs`
-- [ ] T009 [P] Create `IFileSystem` interface in `src/NetTaskList/Infrastructure/Abstractions/IFileSystem.cs` and physical implementation in `src/NetTaskList/Infrastructure/FileSystem.cs`
-- [ ] T010 [P] Create DTOs `ConfigurationDto` and `ScriptTaskDto` in `src/NetTaskList/Infrastructure/Dtos/ConfigurationDto.cs`
-- [ ] T011 Create `TaskJsonContext` source generator in `src/NetTaskList/Infrastructure/Serialization/TaskJsonContext.cs` for Native AOT System.Text.Json compatibility
+- [X] T005 [P] Create `TaskType` enum (`Tool`, `CSharp`) in `src/NetTaskList/Domain/Models/TaskType.cs`
+- [X] T006 [P] Create `ScriptTask` domain model (`Name`, `Command`, `Type`, `Description`, `ResolveExecutionCommand()`) in `src/NetTaskList/Domain/Models/ScriptTask.cs`
+- [X] T007 [P] Create `TaskConfiguration` domain aggregate in `src/NetTaskList/Domain/Models/TaskConfiguration.cs`
+- [X] T008 [P] Create `ValidationResult` and `ValidationError` models in `src/NetTaskList/Domain/Validation/ValidationResult.cs`
+- [X] T009 [P] Create `IFileSystem` interface in `src/NetTaskList/Infrastructure/Abstractions/IFileSystem.cs` and physical implementation in `src/NetTaskList/Infrastructure/FileSystem.cs`
+- [X] T010 [P] Create DTOs `ConfigurationDto` and `ScriptTaskDto` in `src/NetTaskList/Infrastructure/Dtos/ConfigurationDto.cs`
+- [X] T011 Create `TaskJsonContext` source generator in `src/NetTaskList/Infrastructure/Serialization/TaskJsonContext.cs` for Native AOT System.Text.Json compatibility
 
 **Checkpoint**: Fundação pronta - a implementação das histórias de usuário pode prosseguir de forma independente.
 
@@ -50,16 +50,16 @@
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T012 [P] [US1] Unit test for command resolution and direct execution mapping in `tests/NetTaskList.Tests/Infrastructure/CommandResolutionTests.cs`
-- [ ] T013 [P] [US1] Unit test for CLI option parsing (`--run` / `-r` and default invocation) in `tests/NetTaskList.Tests/Presentation/CommandLineParserTests.cs`
+- [X] T012 [P] [US1] Unit test for command resolution and direct execution mapping in `tests/NetTaskList.Tests/Infrastructure/CommandResolutionTests.cs`
+- [X] T013 [P] [US1] Unit test for CLI option parsing (`--run` / `-r` and default invocation) in `tests/NetTaskList.Tests/Presentation/CommandLineParserTests.cs`
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Implement `CommandLineOptions` and `CommandLineParser` in `src/NetTaskList/Presentation/CommandLineParser.cs` supporting `--run` / `-r` and non-interactive stream detection
-- [ ] T015 [US1] Implement `TaskTableRenderer` in `src/NetTaskList/Presentation/TaskTableRenderer.cs` rendering Spectre.Console tables with badges (tool vs csharp)
-- [ ] T016 [US1] Implement `InteractiveTaskSelector` in `src/NetTaskList/Presentation/InteractiveTaskSelector.cs` using Spectre.Console SelectionPrompt with Arrow keys (Up/Down)
-- [ ] T017 [US1] Implement core reader `JsonConfigurationReader` in `src/NetTaskList/Infrastructure/JsonConfigurationReader.cs` using `TaskJsonContext` and `IFileSystem`
-- [ ] T018 [US1] Implement application orchestrator and entry point in `src/NetTaskList/Program.cs` tying CLI parsing, reading, table rendering, and selection prompt together
+- [X] T014 [US1] Implement `CommandLineOptions` and `CommandLineParser` in `src/NetTaskList/Presentation/CommandLineParser.cs` supporting `--run` / `-r` and non-interactive stream detection
+- [X] T015 [US1] Implement `TaskTableRenderer` in `src/NetTaskList/Presentation/TaskTableRenderer.cs` rendering Spectre.Console tables with badges (tool vs csharp)
+- [X] T016 [US1] Implement `InteractiveTaskSelector` in `src/NetTaskList/Presentation/InteractiveTaskSelector.cs` using Spectre.Console SelectionPrompt with Arrow keys (Up/Down)
+- [X] T017 [US1] Implement core reader `JsonConfigurationReader` in `src/NetTaskList/Infrastructure/JsonConfigurationReader.cs` using `TaskJsonContext` and `IFileSystem`
+- [X] T018 [US1] Implement application orchestrator and entry point in `src/NetTaskList/Program.cs` tying CLI parsing, reading, table rendering, and selection prompt together
 
 **Checkpoint**: Neste ponto, a User Story 1 é um MVP funcional e testável de forma autônoma.
 
@@ -73,14 +73,14 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T019 [P] [US2] Unit test for duplicate name detection (case-insensitive) and missing required fields in `tests/NetTaskList.Tests/Domain/ConfigurationValidatorTests.cs`
-- [ ] T020 [P] [US2] Unit test for malformed JSON syntax error diagnostics in `tests/NetTaskList.Tests/Infrastructure/JsonConfigurationReaderTests.cs`
+- [X] T019 [P] [US2] Unit test for duplicate name detection (case-insensitive) and missing required fields in `tests/NetTaskList.Tests/Domain/ConfigurationValidatorTests.cs`
+- [X] T020 [P] [US2] Unit test for malformed JSON syntax error diagnostics in `tests/NetTaskList.Tests/Infrastructure/JsonConfigurationReaderTests.cs`
 
 ### Implementation for User Story 2
 
-- [ ] T021 [US2] Implement `IConfigurationValidator` and `ConfigurationValidator` in `src/NetTaskList/Domain/Validation/ConfigurationValidator.cs` enforcing VR-001 (case-insensitive unique names), VR-002 (name required), VR-003 (command required), and VR-004 (type validation)
-- [ ] T022 [US2] Integrate `ConfigurationValidator` into `src/NetTaskList/Infrastructure/JsonConfigurationReader.cs` to return detailed pt-BR validation errors prior to task processing
-- [ ] T023 [US2] Update `src/NetTaskList/Program.cs` to format and render validation error messages using Spectre.Console markup and exit with code 1
+- [X] T021 [US2] Implement `IConfigurationValidator` and `ConfigurationValidator` in `src/NetTaskList/Domain/Validation/ConfigurationValidator.cs` enforcing VR-001 (case-insensitive unique names), VR-002 (name required), VR-003 (command required), and VR-004 (type validation)
+- [X] T022 [US2] Integrate `ConfigurationValidator` into `src/NetTaskList/Infrastructure/JsonConfigurationReader.cs` to return detailed pt-BR validation errors prior to task processing
+- [X] T023 [US2] Update `src/NetTaskList/Program.cs` to format and render validation error messages using Spectre.Console markup and exit with code 1
 
 **Checkpoint**: Histórias 1 e 2 funcionam de forma integrada e independente, impedindo ambiguidades de execução.
 
@@ -94,13 +94,13 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T024 [P] [US3] Unit test for multi-script loading and type-specific execution command resolution in `tests/NetTaskList.Tests/Infrastructure/CommandResolutionTests.cs`
+- [X] T024 [P] [US3] Unit test for multi-script loading and type-specific execution command resolution in `tests/NetTaskList.Tests/Infrastructure/CommandResolutionTests.cs`
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Implement C# file-scoped command resolution logic in `src/NetTaskList/Domain/Models/ScriptTask.cs` (inferring `dotnet run {command}` when command ends with `.cs` without prefix)
-- [ ] T026 [US3] Enhance `src/NetTaskList/Infrastructure/JsonConfigurationReader.cs` to support both root collection formats: object `{ "scripts": [...] }` / `{ "tasks": [...] }` and direct array `[...]`
-- [ ] T027 [US3] Update `src/NetTaskList/Presentation/TaskTableRenderer.cs` to support clean visual rendering and color badges for large collections of tasks
+- [X] T025 [US3] Implement C# file-scoped command resolution logic in `src/NetTaskList/Domain/Models/ScriptTask.cs` (inferring `dotnet run {command}` when command ends with `.cs` without prefix)
+- [X] T026 [US3] Enhance `src/NetTaskList/Infrastructure/JsonConfigurationReader.cs` to support both root collection formats: object `{ "scripts": [...] }` / `{ "tasks": [...] }` and direct array `[...]`
+- [X] T027 [US3] Update `src/NetTaskList/Presentation/TaskTableRenderer.cs` to support clean visual rendering and color badges for large collections of tasks
 
 **Checkpoint**: Todas as tipificações e múltiplos scripts são suportados com alto desempenho.
 
@@ -114,13 +114,13 @@
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T028 [P] [US4] Unit test for `--init` template creation and `--config` custom path resolution in `tests/NetTaskList.Tests/Presentation/CommandLineParserTests.cs`
+- [X] T028 [P] [US4] Unit test for `--init` template creation and `--config` custom path resolution in `tests/NetTaskList.Tests/Presentation/CommandLineParserTests.cs`
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Implement template generator in `src/NetTaskList/Infrastructure/TemplateConfigurationGenerator.cs` generating clean `nxtl.json` with schema reference and sample tasks
-- [ ] T030 [US4] Implement `--init` and `--config` CLI handlers in `src/NetTaskList/Presentation/CommandLineParser.cs` and wire into `src/NetTaskList/Program.cs`
-- [ ] T031 [US4] Implement friendly pt-BR diagnostic message when `nxtl.json` is missing in `src/NetTaskList/Program.cs`, including guidance to run `nxtl --init` or `--config`
+- [X] T029 [US4] Implement template generator in `src/NetTaskList/Infrastructure/TemplateConfigurationGenerator.cs` generating clean `nxtl.json` with schema reference and sample tasks
+- [X] T030 [US4] Implement `--init` and `--config` CLI handlers in `src/NetTaskList/Presentation/CommandLineParser.cs` and wire into `src/NetTaskList/Program.cs`
+- [X] T031 [US4] Implement friendly pt-BR diagnostic message when `nxtl.json` is missing in `src/NetTaskList/Program.cs`, including guidance to run `nxtl --init` or `--config`
 
 **Checkpoint**: Experiência do desenvolvedor completa para criação, edição e descoberta de arquivos de configuração.
 
@@ -130,9 +130,9 @@
 
 **Purpose**: Documentação, empacotamento Native AOT, publicação NuGet e validação global.
 
-- [ ] T032 [P] Create repository documentation and usage guide in `README.md` detailing installation, `nxtl.json` configuration, and CLI commands
-- [ ] T033 Configure Native AOT publishing profile and parameters in `src/NetTaskList/NetTaskList.csproj` ensuring trim-safety and zero reflection warnings
-- [ ] T034 Run end-to-end quickstart validation scenarios from `specs/001-json-config-processor/quickstart.md` validating `dotnet test`, `dotnet pack`, and Native AOT `dotnet publish`
+- [X] T032 [P] Create repository documentation and usage guide in `README.md` detailing installation, `nxtl.json` configuration, and CLI commands
+- [X] T033 Configure Native AOT publishing profile and parameters in `src/NetTaskList/NetTaskList.csproj` ensuring trim-safety and zero reflection warnings
+- [X] T034 Run end-to-end quickstart validation scenarios from `specs/001-json-config-processor/quickstart.md` validating `dotnet test`, `dotnet pack`, and Native AOT `dotnet publish`
 
 ---
 
