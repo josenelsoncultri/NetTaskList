@@ -23,7 +23,7 @@ public static class InteractiveTaskSelector
             prompt.AddChoice(new TaskChoice(task, Markup.Escape(label)));
         }
 
-        prompt.AddChoice(new TaskChoice(null, "[Sair]"));
+        prompt.AddChoice(new TaskChoice(null, Markup.Escape("[Sair]")));
 
         var selected = ansiConsole.Prompt(prompt);
         return selected.Task;
