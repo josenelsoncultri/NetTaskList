@@ -19,6 +19,7 @@ public sealed class MockAnsiConsole : IAnsiConsole
             Ansi = AnsiSupport.Yes,
         });
 
+        _inner.Profile.Capabilities.Interactive = true;
         _inner.Profile.Width = 80;
         _inner.Profile.Height = 24;
     }
