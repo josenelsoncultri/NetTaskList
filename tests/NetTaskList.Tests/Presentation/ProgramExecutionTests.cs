@@ -1,4 +1,5 @@
 using NetTaskList.Domain.Models;
+using NetTaskList.Presentation;
 using NetTaskList.Tests.Mocks;
 using Spectre.Console;
 using Xunit;
@@ -25,6 +26,24 @@ public class ProgramExecutionTests
       ]
     }
     """;
+
+    [Fact]
+    public void Run_ShowVersion_OutputsDynamicAppVersion()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+
+        // Act
+        var exitCode = Program.Run(["--version"], fileSystem, executor, console);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("nxtl", console.Output);
+        Assert.Contains("versão", console.Output);
+        Assert.Contains(AppVersion.Current, console.Output);
+    }
 
     [Fact]
     public void Run_WithDirectToolTask_ExecutesCommandAndReturnsExitCodeZero()
@@ -121,5 +140,53 @@ public class ProgramExecutionTests
         // Assert
         Assert.Equal(0, exitCode);
         Assert.Empty(executor.ExecutedCommands);
+    }
+
+    [Fact]
+    public void Run_InteractiveMode_DoesNotRenderStaticTableOrAvailableTasksText()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile("nxtl.json", SampleConfig);
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var exitCode = Program.Run([], fileSystem, executor, console);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("Tarefas Disponíveis (nxtl)", console.Output);
+        Assert.DoesNotContain("Tarefas Disponíveis", console.Output);
+    }
+
+    [Fact]
+    public void Run_InteractiveMode_RendersVersionHeaderInGreenAtTop()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile("nxtl.json", SampleConfig);
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var exitCode = Program.Run([], fileSystem, executor, console);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("nxtl", console.Output);
+        Assert.Contains("versão", console.Output);
+        Assert.Contains(AppVersion.Current, console.Output);
+
+        var versionIndex = console.Output.IndexOf("nxtl", StringComparison.Ordinal);
+        var promptIndex = console.Output.IndexOf("Selecionar uma tarefa para executar", StringComparison.Ordinal);
+        Assert.True(versionIndex >= 0, "Version header should be rendered.");
+        Assert.True(promptIndex > versionIndex, "Version header should appear before the selection prompt.");
     }
 }

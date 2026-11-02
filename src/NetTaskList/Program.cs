@@ -40,7 +40,7 @@ public static class Program
 
         if (options.ShowVersion)
         {
-            ansiConsole.MarkupLine("[bold green]nxtl[/] versão [yellow]1.0.0[/]");
+            ansiConsole.MarkupLine($"[bold green]nxtl[/] versão [yellow]{Markup.Escape(AppVersion.Current)}[/]");
             return 0;
         }
 
@@ -107,8 +107,8 @@ public static class Program
             return ExecuteTask(target, executor, fs, ansiConsole);
         }
 
-        // Display tasks table
-        TaskTableRenderer.Render(configuration.Tasks, ansiConsole);
+        // Listing header with dynamic version in green
+        ansiConsole.MarkupLine($"[green]nxtl versão {Markup.Escape(AppVersion.Current)}[/]");
 
         // Fallback for non-interactive / redirected streams
         if (Console.IsInputRedirected && console == null)

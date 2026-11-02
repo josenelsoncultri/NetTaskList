@@ -95,4 +95,32 @@ public class InteractiveTaskSelectorTests
         Assert.NotNull(result);
         Assert.Equal("[build:prod]", result.Name);
     }
+
+    [Fact]
+    public void SelectTask_RendersCyanTitleAndRespectsPageSizeEight()
+    {
+        // Arrange: 10 tasks + 1 exit option = 11 choices
+        var tasks = Enumerable.Range(1, 10)
+            .Select(i => new ScriptTask($"task-{i:D2}", $"echo {i}", TaskType.Tool, $"Description {i}"))
+            .ToList();
+
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("task-01", result.Name);
+
+        // Title text in Portuguese without trailing colon
+        Assert.Contains("Selecionar uma tarefa para executar", console.Output);
+        Assert.DoesNotContain("Selecione uma tarefa para executar:", console.Output);
+
+        // When PageSize is 8, tasks beyond the 8 visible viewport choices should not appear initially,
+        // and the MoreChoicesText message should be rendered.
+        Assert.Contains("(Mova para cima e para baixo para ver mais opções)", console.Output);
+        Assert.DoesNotContain("task-10", console.Output);
+    }
 }

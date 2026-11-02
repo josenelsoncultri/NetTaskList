@@ -10,8 +10,8 @@ public static class InteractiveTaskSelector
         var ansiConsole = console ?? AnsiConsole.Console;
 
         var prompt = new SelectionPrompt<TaskChoice>()
-            .Title("[bold yellow]Selecione uma tarefa para executar:[/]")
-            .PageSize(15)
+            .Title("[cyan]Selecionar uma tarefa para executar[/]")
+            .PageSize(8)
             .MoreChoicesText("[grey](Mova para cima e para baixo para ver mais opções)[/]")
             .UseConverter(choice => choice.DisplayName);
 
