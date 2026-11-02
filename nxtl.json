@@ -5,6 +5,18 @@
       "command": "gh workflow run publish.yml && gh run watch",
       "type": "tool",
       "description": "Executa o workflow do GitHub para publicação da tool no Nuget"
+    },
+    {
+      "name": "clean-build-folders-win",
+      "command": "powershell -Command \"Get-ChildItem . -include bin,obj -Recurse | foreach ($_) { remove-item $_.fullname -Force -Recurse }\"",
+      "type": "tool",
+      "description": "Exclui as pastas bin e obj da solução, no Windows, de maneira recursiva"
+    },
+    {
+      "name": "clean-build-folders-linux",
+      "command": "find . -type d ( -name 'bin' -o -name 'obj' ) -exec rm -rf {} +",
+      "type": "tool",
+      "description": "Exclui as pastas bin e obj da solução, no Linux, de maneira recursiva"
     }
   ]
 }
