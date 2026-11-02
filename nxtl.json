@@ -14,7 +14,7 @@
     },
     {
       "name": "clean-build-folders-linux",
-      "command": "find . -type d ( -name 'bin' -o -name 'obj' ) -exec rm -rf {} +",
+      "command": "find . -type d \\( -name \"bin\" -o -name \"obj\" \\) -exec rm -rf {} +",
       "type": "tool",
       "description": "Exclui as pastas bin e obj da solução, no Linux, de maneira recursiva"
     }
