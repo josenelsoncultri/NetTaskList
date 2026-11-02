@@ -5,6 +5,12 @@
       "command": "gh workflow run publish.yml",
       "type": "tool",
       "description": "Executa o workflow do GitHub para publicação da tool no Nuget"
+    },
+    {
+      "name": "update-nettasklist",
+      "command": "dotnet tool update -g nettasklist",
+      "type": "tool",
+      "description": "Atualiza a ferramenta nxtl de modo global"
     }
   ]
 }

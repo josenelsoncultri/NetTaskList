@@ -24,6 +24,12 @@ public static class TemplateConfigurationGenerator
       "command": "scripts/seed.cs",
       "type": "csharp",
       "description": "Executa o script de carga inicial em C#"
+    },
+    {
+      "name": "update-nettasklist",
+      "command": "dotnet tool update -g nettasklist",
+      "type": "tool",
+      "description": "Atualiza a ferramenta nxtl de modo global"
     }
   ]
 }

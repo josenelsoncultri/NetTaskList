@@ -75,6 +75,12 @@ Isso criará o arquivo `nxtl.json` com tarefas de exemplo.
       "command": "scripts/seed.cs",
       "type": "csharp",
       "description": "Script C# file-scoped para popular banco de dados"
+    },
+    {
+      "name": "update-nettasklist",
+      "command": "dotnet tool update -g nettasklist",
+      "type": "tool",
+      "description": "Atualiza a ferramenta nxtl de modo global"
     }
   ]
 }
