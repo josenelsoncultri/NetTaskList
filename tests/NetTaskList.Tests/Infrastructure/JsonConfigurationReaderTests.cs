@@ -109,4 +109,28 @@ public class JsonConfigurationReaderTests
         Assert.Equal("seed", config.Tasks[0].Name);
         Assert.Equal(TaskType.CSharp, config.Tasks[0].Type);
     }
+
+    [Fact]
+    public void Read_LegacyConfigurationWithSchema_ReturnsTaskConfigurationSuccessfully()
+    {
+        var json = """
+        {
+          "$schema": "https://raw.githubusercontent.com/nettasklist/nxtl/main/schemas/nxtl-v1.schema.json",
+          "scripts": [
+            { "name": "legacy-task", "command": "dotnet run", "type": "tool", "description": "Legacy task" }
+          ]
+        }
+        """;
+        _fileSystem.AddFile("nxtl.json", json);
+        var reader = new JsonConfigurationReader(_fileSystem, _validator);
+
+        var config = reader.Read("nxtl.json");
+
+        Assert.True(config.HasTasks);
+        Assert.Equal(1, config.Count);
+        Assert.Equal("legacy-task", config.Tasks[0].Name);
+        Assert.Equal("dotnet run", config.Tasks[0].Command);
+        Assert.Equal(TaskType.Tool, config.Tasks[0].Type);
+        Assert.Equal("Legacy task", config.Tasks[0].Description);
+    }
 }

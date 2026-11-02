@@ -6,7 +6,6 @@ public static class TemplateConfigurationGenerator
     {
         return """
 {
-  "$schema": "https://raw.githubusercontent.com/nettasklist/nxtl/main/schemas/nxtl-v1.schema.json",
   "scripts": [
     {
       "name": "build",

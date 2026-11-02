@@ -51,13 +51,12 @@ No diretório raiz do seu projeto, gere um arquivo `nxtl.json` modelo:
 nxtl --init
 ```
 
-Isso criará o arquivo `nxtl.json` com o esquema formal configurado e tarefas de exemplo.
+Isso criará o arquivo `nxtl.json` com tarefas de exemplo.
 
 ### 2. Estrutura do Arquivo `nxtl.json`
 
 ```json
 {
-  "$schema": "https://raw.githubusercontent.com/nettasklist/nxtl/main/schemas/nxtl-v1.schema.json",
   "scripts": [
     {
       "name": "build",

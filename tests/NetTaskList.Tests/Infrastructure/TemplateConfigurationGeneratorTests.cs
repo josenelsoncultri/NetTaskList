@@ -13,8 +13,8 @@ public class TemplateConfigurationGeneratorTests
     {
         var template = TemplateConfigurationGenerator.GenerateDefaultJson();
         Assert.NotNull(template);
-        Assert.Contains("$schema", template);
-        Assert.Contains("nxtl-v1.schema.json", template);
+        Assert.DoesNotContain("$schema", template);
+        Assert.DoesNotContain("nxtl-v1.schema.json", template);
         Assert.Contains("build", template);
         Assert.Contains("test", template);
         Assert.Contains("seed", template);
