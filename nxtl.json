@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nettasklist/nxtl/main/schemas/nxtl-v1.schema.json",
+  "scripts": [
+    {
+      "name": "gh-workflow-run",
+      "command": "gh workflow run publish.yml",
+      "type": "tool",
+      "description": "Executa o workflow do GitHub para publicação da tool no Nuget"
+    }
+  ]
+}

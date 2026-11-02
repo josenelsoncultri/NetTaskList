@@ -1,12 +1,15 @@
 <!--
 Sync Impact Report:
-- Version change: 1.2.0 → 2.0.0
+- Version change: 2.0.0 → 2.1.0
 - List of modified principles: None
-- Added sections: None
-- Removed sections:
-  - Branch Isolation (under Development Workflow & Quality Gates)
+- Added principles / sections:
+  - Added Principle VI. Versioning Policy & Spec Implementation Lifecycle (under Core Principles)
+  - Added Spec Completion & Version Management gate (under Development Workflow & Quality Gates)
+- Removed sections: None
 - Modified sections:
-  - Development Workflow & Quality Gates: Removed the requirement for mandatory branch isolation and Pull Requests; defined deployment and package publishing via GitHub Actions workflow (`publish.yml`).
+  - Core Principles: Added VI. Versioning Policy & Spec Implementation Lifecycle
+  - Development Workflow & Quality Gates: Added version estimation and update rule for spec completion
+  - Review & Quality Compliance: Added verification of version management in src/NetTaskList/NetTaskList.csproj
 - Follow-up TODOs: None
 -->
 
@@ -43,6 +46,13 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
 - The project `.csproj` MUST be configured as a packable tool (`<PackAsTool>true</PackAsTool>`).
 - The executable command name MUST be configured as `nxtl` (`<ToolCommandName>nxtl</ToolCommandName>`), enabling global invocation directly from the terminal.
 
+### VI. Versioning Policy & Spec Implementation Lifecycle
+Project versioning MUST follow semantic versioning rules directly tied to the scope and nature of code modifications, governed in the primary component project file `src/NetTaskList/NetTaskList.csproj` (`<Version>` element).
+- **Build / Patch Version (`X.Y.Z` → `X.Y.(Z+1)`)**: Small code modifications, targeted bug fixes, and minimal adjustments that do not alter the fundamental essence or public behavior of the software MUST increment only the build/patch version.
+- **Minor / Feature Version (`X.Y.Z` → `X.(Y+1).0`)**: Changes that add new features, commands, configuration capabilities, or enhancements MUST increment the minor version number.
+- **Major Version (`X.Y.Z` → `(X+1).0.0`)**: Major architectural revisions, breaking changes, or substantial new functional subsystems MUST increment the major version.
+- **Spec Implementation Gate & User Confirmation**: Upon completing the implementation of any specification, the code changes MUST be analyzed to estimate the appropriate version bump, and the `<Version>` element in `src/NetTaskList/NetTaskList.csproj` updated. If the correct version cannot be estimated with confidence, the implementer MUST NOT modify the file automatically; they MUST prompt the user for the correct target version, await explicit confirmation, and only then apply the modification.
+
 ## Architecture & Technology Constraints
 
 - **Platform & Runtime**: .NET 10 (`net10.0`) C#.
@@ -63,7 +73,8 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
 - **Automated Deployment via GitHub Actions**: Package building, validation, and deployment (publishing to NuGet) are governed and executed via the official GitHub Actions workflow (`.github/workflows/publish.yml`) using NuGet Trusted Publishing (OIDC). Publishing is triggered by published GitHub Releases or manual execution via `workflow_dispatch`.
 - **Conventional Commits**: All commit messages MUST strictly adhere to the Conventional Commits specification (e.g., `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`).
 - **Continuous Verification**: Changes must compile with zero warnings and pass 100% of unit tests (`dotnet test`) before deployment.
-- **Review & Quality Compliance**: All contributions must adhere to these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), dependency justification, and automated workflow deployment.
+- **Spec Completion & Version Management**: At the conclusion of any feature or spec implementation, the codebase MUST be evaluated against the versioning policy. The `<Version>` element in `src/NetTaskList/NetTaskList.csproj` MUST be updated according to the change magnitude. When confidence is lacking, the user MUST be prompted for explicit version guidance before any modification is applied.
+- **Review & Quality Compliance**: All contributions must adhere to these constitutional principles, specifically verifying bilingual consistency (English code / Portuguese UI), repository layout compliance (`src/` and `tests/`), dependency justification, version management in `src/NetTaskList/NetTaskList.csproj`, and automated workflow deployment.
 
 ## Governance
 
@@ -74,4 +85,4 @@ The project MUST be packaged and distributed as a modern .NET CLI tool.
   - **PATCH**: Clarifications, wording adjustments, or non-semantic corrections.
 - All feature specifications (`spec.md`), architectural plans (`plan.md`), and task lists (`tasks.md`) produced across Spec Kit workflows MUST maintain strict compliance with this Constitution.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-10-31
+**Version**: 2.1.0 | **Ratified**: 2026-10-30 | **Last Amended**: 2026-11-01
