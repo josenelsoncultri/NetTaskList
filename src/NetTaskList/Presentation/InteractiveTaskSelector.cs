@@ -59,6 +59,7 @@ public static class InteractiveTaskSelector
         var prompt = new SelectionPrompt<TaskChoice>()
             .Title("[cyan]Selecionar uma tarefa para executar[/]")
             .PageSize(8)
+            .WrapAround(true)
             .MoreChoicesText("[grey](Mova para cima e para baixo para ver mais opções)[/]")
             .UseConverter(choice => choice.DisplayName);
 

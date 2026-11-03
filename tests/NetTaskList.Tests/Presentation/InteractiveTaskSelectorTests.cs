@@ -39,6 +39,125 @@ public class InteractiveTaskSelectorTests
     }
 
     [Fact]
+    public void SelectTask_WhenNavigatingDownPastLastOption_WrapsAroundToFirstTask()
+    {
+        // Arrange: 3 tasks + 1 exit option = 4 choices (indices 0, 1, 2, 3)
+        var tasks = CreateSampleTasks();
+        var console = new MockAnsiConsole();
+
+        // 4 DownArrow keypresses: 0 -> 1 -> 2 -> 3 -> 0 (wrap-around)
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        // Assert: Wrapped back to index 0 (build)
+        Assert.NotNull(result);
+        Assert.Equal("build", result.Name);
+    }
+
+    [Fact]
+    public void SelectTask_WhenNavigatingUpFromFirstOption_WrapsAroundToExitChoice()
+    {
+        // Arrange
+        var tasks = CreateSampleTasks();
+        var console = new MockAnsiConsole();
+
+        // Cursor starts at index 0 (build).
+        // Pressing UpArrow wraps around directly to the last option ([Sair]).
+        console.PushKey(ConsoleKey.UpArrow);
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        // Assert: [Sair] choice returns null
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void SelectTask_WhenNavigatingUpTwiceFromFirstOption_WrapsToLastConfiguredTask()
+    {
+        // Arrange
+        var tasks = CreateSampleTasks();
+        var console = new MockAnsiConsole();
+
+        // Cursor starts at 0 (build).
+        // Up -> [Sair], Up -> seed (last task in list)
+        console.PushKey(ConsoleKey.UpArrow);
+        console.PushKey(ConsoleKey.UpArrow);
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        // Assert: Selects the last task
+        Assert.NotNull(result);
+        Assert.Equal("seed", result.Name);
+    }
+
+    [Fact]
+    public void SelectTask_WhenNavigatingContinuousCyclesAcrossPaginatedList_WrapsSmoothly()
+    {
+        // Arrange: 10 tasks + 1 exit option = 11 choices. PageSize is 8.
+        var tasks = Enumerable.Range(1, 10)
+            .Select(i => new ScriptTask($"task-{i:D2}", $"echo {i}", TaskType.Tool, $"Description {i}"))
+            .ToList();
+
+        var console = new MockAnsiConsole();
+
+        // Cursor starts at index 0 (task-01).
+        // Navigating Down 24 times: 24 % 11 = 2 (task-03).
+        for (var i = 0; i < 24; i++)
+        {
+            console.PushKey(ConsoleKey.DownArrow);
+        }
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        // Assert: 2 complete cycles + 2 steps = task-03
+        Assert.NotNull(result);
+        Assert.Equal("task-03", result.Name);
+
+        // Verify Portuguese navigation prompt title and scroll hint
+        Assert.Contains("Selecionar uma tarefa para executar", console.Output);
+        Assert.Contains("(Mova para cima e para baixo para ver mais opções)", console.Output);
+    }
+
+    [Fact]
+    public void SelectTask_WhenSingleTaskConfigured_WrapsBetweenTaskAndExitOption()
+    {
+        // Arrange: 1 task + 1 exit option = 2 choices (indices 0 and 1)
+        var tasks = new List<ScriptTask>
+        {
+            new("single", "dotnet run", TaskType.Tool, "Single configured task")
+        };
+
+        var console = new MockAnsiConsole();
+
+        // Cursor starts at 0 (single).
+        // Up -> 1 ([Sair]), Up -> 0 (single), Down -> 1 ([Sair]), Down -> 0 (single).
+        console.PushKey(ConsoleKey.UpArrow);
+        console.PushKey(ConsoleKey.UpArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.Enter);
+
+        // Act
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        // Assert: Wraps back and forth cleanly
+        Assert.NotNull(result);
+        Assert.Equal("single", result.Name);
+    }
+
+    [Fact]
     public void SelectTask_WhenFirstTaskSelected_ReturnsFirstTask()
     {
         // Arrange
