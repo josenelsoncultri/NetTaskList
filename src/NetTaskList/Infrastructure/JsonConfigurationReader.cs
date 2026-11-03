@@ -37,7 +37,7 @@ public sealed class JsonConfigurationReader
         _validator = validator ?? new ConfigurationValidator();
     }
 
-    public TaskConfiguration Read(string filePath)
+    public TaskConfiguration Read(string filePath, ConfigurationSourceType? sourceType = null)
     {
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("O caminho do arquivo de configuração não pode ser vazio.", nameof(filePath));
@@ -61,11 +61,85 @@ public sealed class JsonConfigurationReader
                 $"Erro ao ler o arquivo de configuração '{filePath}': {ex.Message}", ex);
         }
 
+        var determinedSourceType = sourceType ??
+            (Path.GetFileName(fullPath).Equals("package.json", StringComparison.OrdinalIgnoreCase)
+                ? ConfigurationSourceType.PackageJson
+                : ConfigurationSourceType.NxtlJson);
+
         if (string.IsNullOrWhiteSpace(jsonContent))
         {
-            return new TaskConfiguration(fullPath, Array.Empty<ScriptTask>());
+            return new TaskConfiguration(fullPath, Array.Empty<ScriptTask>(), determinedSourceType);
         }
 
+        if (determinedSourceType == ConfigurationSourceType.PackageJson)
+        {
+            return ReadPackageJson(fullPath, jsonContent, filePath);
+        }
+
+        return ReadNxtlJson(fullPath, jsonContent, filePath, determinedSourceType);
+    }
+
+    private TaskConfiguration ReadPackageJson(string fullPath, string jsonContent, string filePath)
+    {
+        PackageJsonDto? packageDto;
+        try
+        {
+            packageDto = JsonSerializer.Deserialize(
+                jsonContent,
+                TaskJsonContext.Default.PackageJsonDto);
+        }
+        catch (JsonException ex)
+        {
+            throw new JsonConfigurationException(
+                $"O arquivo de configuração '{filePath}' não é um JSON válido: {ex.Message}", ex);
+        }
+
+        if (packageDto?.Scripts == null || packageDto.Scripts.Count == 0)
+        {
+            return new TaskConfiguration(fullPath, Array.Empty<ScriptTask>(), ConfigurationSourceType.PackageJson);
+        }
+
+        var tasks = new List<ScriptTask>();
+        var validationErrors = new List<ValidationError>();
+
+        foreach (var (scriptName, element) in packageDto.Scripts)
+        {
+            if (string.IsNullOrWhiteSpace(scriptName))
+            {
+                validationErrors.Add(new ValidationError("Name", "O nome do script no 'package.json' não pode ser vazio."));
+                continue;
+            }
+
+            if (element.ValueKind != JsonValueKind.String)
+            {
+                validationErrors.Add(new ValidationError("Command", $"O comando da tarefa '{scriptName}' no 'package.json' deve ser uma string de texto válida."));
+                continue;
+            }
+
+            var command = element.GetString();
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                validationErrors.Add(new ValidationError("Command", $"O comando da tarefa '{scriptName}' no 'package.json' não pode ser vazio."));
+                continue;
+            }
+
+            tasks.Add(new ScriptTask(scriptName.Trim(), command.Trim(), TaskType.Tool, null));
+        }
+
+        if (validationErrors.Count > 0)
+        {
+            throw new ConfigurationValidationException(ValidationResult.Failure(validationErrors));
+        }
+
+        return new TaskConfiguration(fullPath, tasks, ConfigurationSourceType.PackageJson);
+    }
+
+    private TaskConfiguration ReadNxtlJson(
+        string fullPath,
+        string jsonContent,
+        string filePath,
+        ConfigurationSourceType determinedSourceType)
+    {
         List<ScriptTaskDto>? rawTasks = null;
         var trimmed = jsonContent.TrimStart();
 
@@ -122,6 +196,6 @@ public sealed class JsonConfigurationReader
             }
         }
 
-        return new TaskConfiguration(fullPath, tasks);
+        return new TaskConfiguration(fullPath, tasks, determinedSourceType);
     }
 }

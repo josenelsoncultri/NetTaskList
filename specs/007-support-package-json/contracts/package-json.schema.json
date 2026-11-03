@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PackageJsonScriptSubset",
+  "description": "Subconjunto do schema do package.json lido pelo nxtl",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do pacote (opcional para o nxtl)"
+    },
+    "scripts": {
+      "type": "object",
+      "description": "Mapeamento de nomes de scripts para linhas de comando de execução",
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Linha de comando do shell associada à tarefa"
+      }
+    }
+  },
+  "additionalProperties": true
+}
+

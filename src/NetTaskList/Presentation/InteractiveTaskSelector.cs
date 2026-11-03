@@ -5,9 +5,56 @@ namespace NetTaskList.Presentation;
 
 public static class InteractiveTaskSelector
 {
-    public static ScriptTask? SelectTask(IReadOnlyList<ScriptTask> tasks, IAnsiConsole? console = null)
+    public static IReadOnlyList<ScriptTask> FilterDisplayTasks(
+        IReadOnlyList<ScriptTask> tasks,
+        ConfigurationSourceType sourceType)
+    {
+        if (sourceType != ConfigurationSourceType.PackageJson)
+        {
+            return tasks;
+        }
+
+        var result = new List<ScriptTask>();
+        foreach (var task in tasks)
+        {
+            if (task.Name.StartsWith("pre", StringComparison.OrdinalIgnoreCase) && task.Name.Length > 3)
+            {
+                var baseName = task.Name[3..];
+                if (tasks.Any(t => t.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue; // Hide pre hook when matching main task exists
+                }
+            }
+
+            if (task.Name.StartsWith("post", StringComparison.OrdinalIgnoreCase) && task.Name.Length > 4)
+            {
+                var baseName = task.Name[4..];
+                if (tasks.Any(t => t.Name.Equals(baseName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue; // Hide post hook when matching main task exists
+                }
+            }
+
+            result.Add(task);
+        }
+
+        return result;
+    }
+
+    public static ScriptTask? SelectTask(
+        IReadOnlyList<ScriptTask> tasks,
+        IAnsiConsole? console = null)
+    {
+        return SelectTask(tasks, ConfigurationSourceType.NxtlJson, console);
+    }
+
+    public static ScriptTask? SelectTask(
+        IReadOnlyList<ScriptTask> tasks,
+        ConfigurationSourceType sourceType,
+        IAnsiConsole? console = null)
     {
         var ansiConsole = console ?? AnsiConsole.Console;
+        var displayTasks = FilterDisplayTasks(tasks, sourceType);
 
         var prompt = new SelectionPrompt<TaskChoice>()
             .Title("[cyan]Selecionar uma tarefa para executar[/]")
@@ -15,7 +62,7 @@ public static class InteractiveTaskSelector
             .MoreChoicesText("[grey](Mova para cima e para baixo para ver mais opções)[/]")
             .UseConverter(choice => choice.DisplayName);
 
-        foreach (var task in tasks)
+        foreach (var task in displayTasks)
         {
             var typeTag = task.Type == TaskType.CSharp ? "csharp" : "tool";
             var description = string.IsNullOrWhiteSpace(task.Description) ? task.Command : task.Description;

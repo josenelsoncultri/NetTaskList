@@ -49,21 +49,24 @@ public static class Program
             return HandleInit(options.ConfigPath ?? "nxtl.json", fs, ansiConsole);
         }
 
-        var configFilePath = options.ConfigPath ?? "nxtl.json";
-        var fullPath = fs.GetFullPath(configFilePath);
+        var resolver = new ConfigurationFileResolver(fs);
+        var resolution = resolver.Resolve(options.ConfigPath);
 
-        if (!fs.FileExists(fullPath))
+        if (!resolution.Found)
         {
-            ansiConsole.MarkupLine($"[bold red]Erro:[/] O arquivo de configuração '[yellow]{Markup.Escape(configFilePath)}[/]' não foi encontrado.");
+            ansiConsole.MarkupLine($"[bold red]Erro:[/] {Markup.Escape(resolution.ErrorMessage ?? "Arquivo de configuração não encontrado.")}");
             ansiConsole.MarkupLine("Execute '[bold cyan]nxtl --init[/]' para criar um arquivo inicial ou use '[bold cyan]nxtl --config <caminho>[/]' para especificar outro arquivo.");
             return 1;
         }
+
+        var fullPath = resolution.FilePath!;
+        var configFilePath = options.ConfigPath ?? Path.GetFileName(fullPath);
 
         TaskConfiguration configuration;
         try
         {
             var reader = new JsonConfigurationReader(fs);
-            configuration = reader.Read(fullPath);
+            configuration = reader.Read(fullPath, resolution.SourceType);
         }
         catch (ConfigurationValidationException ex)
         {
@@ -91,6 +94,8 @@ public static class Program
             return 0;
         }
 
+        var coordinator = new TaskExecutionCoordinator(executor, fs, ansiConsole);
+
         // Direct execution mode via --run / -r
         if (!string.IsNullOrWhiteSpace(options.RunTaskName))
         {
@@ -104,7 +109,7 @@ public static class Program
                 return 1;
             }
 
-            return ExecuteTask(target, executor, fs, ansiConsole);
+            return coordinator.Execute(target, configuration);
         }
 
         // Listing header with dynamic version in green
@@ -118,48 +123,14 @@ public static class Program
         }
 
         // Interactive selection mode
-        var selectedTask = InteractiveTaskSelector.SelectTask(configuration.Tasks, ansiConsole);
+        var selectedTask = InteractiveTaskSelector.SelectTask(configuration.Tasks, configuration.SourceType, ansiConsole);
         if (selectedTask is null)
         {
             ansiConsole.MarkupLine("[grey]Operação cancelada pelo usuário.[/]");
             return 0;
         }
 
-        return ExecuteTask(selectedTask, executor, fs, ansiConsole);
-    }
-
-    private static int ExecuteTask(ScriptTask task, IProcessExecutor executor, IFileSystem fileSystem, IAnsiConsole console)
-    {
-        var badgeColor = task.Type == TaskType.CSharp ? "green" : "cyan";
-        var badgeText = task.Type == TaskType.CSharp ? "csharp" : "tool";
-        console.MarkupLine($"Tarefa selecionada: [bold white]{Markup.Escape(task.Name)}[/] [[[{badgeColor}]{badgeText}[/]]]");
-
-        if (task.Type == TaskType.CSharp)
-        {
-            var rawCommand = task.Command.Trim();
-            if (rawCommand.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
-                !rawCommand.StartsWith("dotnet run", StringComparison.OrdinalIgnoreCase))
-            {
-                var fullScriptPath = fileSystem.GetFullPath(rawCommand);
-                if (!fileSystem.FileExists(fullScriptPath) && !fileSystem.FileExists(rawCommand))
-                {
-                    console.MarkupLine($"[bold red]Erro:[/] O arquivo de script C# '[yellow]{Markup.Escape(rawCommand)}[/]' não foi encontrado.");
-                    return 1;
-                }
-            }
-        }
-
-        var commandLine = task.ResolveExecutionCommand();
-        console.MarkupLine($"Comando: [bold yellow]{Markup.Escape(commandLine)}[/]");
-
-        var result = executor.Execute(commandLine);
-
-        if (result.ErrorMessage != null)
-        {
-            console.MarkupLine($"[bold red]Erro ao executar tarefa:[/] {Markup.Escape(result.ErrorMessage)}");
-        }
-
-        return result.ExitCode;
+        return coordinator.Execute(selectedTask, configuration);
     }
 
     private static int HandleInit(string targetPath, IFileSystem fileSystem, IAnsiConsole console)
@@ -185,7 +156,7 @@ public static class Program
         console.MarkupLine("[bold]Uso:[/] [cyan]nxtl[/] [grey][[opções]][/]");
         console.WriteLine();
         console.MarkupLine("[bold]Opções:[/]");
-        console.MarkupLine("  [cyan]-c, --config <caminho>[/]  Especifica um caminho personalizado para o arquivo de configuração JSON");
+        console.MarkupLine("  [cyan]-c, --config <caminho>[/]  Especifica um caminho personalizado para o arquivo de configuração ('nxtl.json' ou 'package.json')");
         console.MarkupLine("  [cyan]-r, --run <nome>[/]         Seleciona e direciona para execução direta uma tarefa específica");
         console.MarkupLine("  [cyan]-i, --init[/]               Gera um arquivo modelo 'nxtl.json' com exemplos práticos");
         console.MarkupLine("  [cyan]-h, --help[/]               Exibe esta mensagem de ajuda");

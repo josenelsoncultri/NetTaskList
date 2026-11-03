@@ -5,16 +5,25 @@ namespace NetTaskList.Domain.Models;
 /// </summary>
 public sealed class TaskConfiguration
 {
-    public TaskConfiguration(string sourcePath, IReadOnlyList<ScriptTask> tasks)
+    public TaskConfiguration(
+        string sourcePath,
+        IReadOnlyList<ScriptTask> tasks,
+        ConfigurationSourceType sourceType = ConfigurationSourceType.NxtlJson)
     {
         SourcePath = sourcePath ?? throw new ArgumentNullException(nameof(sourcePath));
         Tasks = tasks ?? throw new ArgumentNullException(nameof(tasks));
+        SourceType = sourceType;
     }
 
     /// <summary>
     /// Absolute or relative path to the configuration file source.
     /// </summary>
     public string SourcePath { get; }
+
+    /// <summary>
+    /// Origin source type of the configuration (NxtlJson, PackageJson, or Custom).
+    /// </summary>
+    public ConfigurationSourceType SourceType { get; }
 
     /// <summary>
     /// Immutable list of validated tasks.
