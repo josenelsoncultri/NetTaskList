@@ -13,6 +13,10 @@
     <Description>CLI tool to parse, list and execute tasks declared in nxtl.json</Description>
     <Authors>NetTaskList Team</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/josenelsoncultri/nettasklist</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/josenelsoncultri/nettasklist</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
