@@ -52,11 +52,29 @@ public sealed class ConfigurationValidator : IConfigurationValidator
             var displayName = string.IsNullOrWhiteSpace(task.Name) ? $"índice [{i}]" : task.Name.Trim();
 
             // VR-003: Command is required
-            if (string.IsNullOrWhiteSpace(task.Command))
+            if (task.Commands == null || task.Commands.Count == 0)
             {
                 errors.Add(new ValidationError(
                     nameof(task.Command),
                     $"A tarefa '{displayName}' não define um comando a ser executado."));
+            }
+            else
+            {
+                if (task.Commands.Any(string.IsNullOrWhiteSpace))
+                {
+                    if (task.Commands.Count == 1)
+                    {
+                        errors.Add(new ValidationError(
+                            nameof(task.Command),
+                            $"A tarefa '{displayName}' não define um comando a ser executado."));
+                    }
+                    else
+                    {
+                        errors.Add(new ValidationError(
+                            nameof(task.Command),
+                            $"A tarefa '{displayName}' possui um comando vazio ou inválido na lista de comandos."));
+                    }
+                }
             }
 
             // VR-004: Type validation

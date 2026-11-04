@@ -65,7 +65,20 @@ public static class InteractiveTaskSelector
         foreach (var task in displayTasks)
         {
             var typeTag = task.Type == TaskType.CSharp ? "csharp" : "tool";
-            var description = string.IsNullOrWhiteSpace(task.Description) ? task.Command : task.Description;
+            string description;
+            if (!string.IsNullOrWhiteSpace(task.Description))
+            {
+                description = task.Description;
+            }
+            else if (task.Commands.Count > 1)
+            {
+                description = "<sem descrição>";
+            }
+            else
+            {
+                description = task.Command;
+            }
+
             var label = $"{task.Name} [{typeTag}] - {description}";
             prompt.AddChoice(new TaskChoice(task, Markup.Escape(label)));
         }

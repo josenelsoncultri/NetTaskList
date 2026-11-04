@@ -2,7 +2,10 @@
   "scripts": [
     {
       "name": "gh-workflow-run",
-      "command": "gh workflow run publish.yml && gh run watch",
+      "command": [
+        "gh workflow run publish.yml",
+        "gh run watch"
+      ],
       "type": "tool",
       "description": "Executa o workflow do GitHub para publicação da tool no Nuget"
     },

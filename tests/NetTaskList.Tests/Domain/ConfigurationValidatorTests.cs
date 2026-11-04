@@ -24,6 +24,57 @@ public class ConfigurationValidatorTests
         Assert.Empty(result.Errors);
     }
 
+    [Fact]
+    public void Validate_ValidMultipleCommands_ReturnsSuccess()
+    {
+        var tasks = new List<ScriptTaskDto>
+        {
+            new()
+            {
+                Name = "pipeline",
+                Commands = new List<string> { "dotnet clean", "dotnet build", "dotnet test" },
+                Type = "tool"
+            }
+        };
+
+        var result = _validator.Validate(tasks);
+
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void Validate_EmptyCommandsArray_ReturnsError()
+    {
+        var tasks = new List<ScriptTaskDto>
+        {
+            new() { Name = "empty-cmds", Commands = new List<string>() }
+        };
+
+        var result = _validator.Validate(tasks);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == "Command" && e.Message.Contains("não define um comando"));
+    }
+
+    [Fact]
+    public void Validate_CommandsArrayWithWhitespaceItem_ReturnsError()
+    {
+        var tasks = new List<ScriptTaskDto>
+        {
+            new()
+            {
+                Name = "partial-empty",
+                Commands = new List<string> { "dotnet build", "   ", "dotnet test" }
+            }
+        };
+
+        var result = _validator.Validate(tasks);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == "Command" && e.Message.Contains("comando vazio ou inválido na lista de comandos"));
+    }
+
     [Theory]
     [InlineData("build", "build")]
     [InlineData("build", "BUILD")]

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using NetTaskList.Infrastructure.Serialization;
 
 namespace NetTaskList.Infrastructure.Dtos;
 
@@ -20,7 +21,15 @@ public sealed class ScriptTaskDto
     public string? Name { get; set; }
 
     [JsonPropertyName("command")]
-    public string? Command { get; set; }
+    [JsonConverter(typeof(CommandPropertyJsonConverter))]
+    public List<string>? Commands { get; set; }
+
+    [JsonIgnore]
+    public string? Command
+    {
+        get => Commands != null && Commands.Count > 0 ? Commands[0] : null;
+        set => Commands = value == null ? null : new List<string> { value };
+    }
 
     [JsonPropertyName("type")]
     public string? Type { get; set; }

@@ -9,7 +9,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>nxtl</ToolCommandName>
     <PackageId>NetTaskList</PackageId>
-    <Version>1.3.0</Version>
+    <Version>1.4.0</Version>
     <Description>CLI tool to parse, list and execute tasks declared in nxtl.json</Description>
     <Authors>NetTaskList Team</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -21,6 +21,10 @@
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.57.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="NetTaskList.Tests" />
   </ItemGroup>
 
   <ItemGroup>

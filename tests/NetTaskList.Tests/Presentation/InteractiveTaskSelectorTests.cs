@@ -123,4 +123,40 @@ public class InteractiveTaskSelectorTests
         Assert.Contains("(Mova para cima e para baixo para ver mais opções)", console.Output);
         Assert.DoesNotContain("task-10", console.Output);
     }
+
+    [Fact]
+    public void SelectTask_WhenMultiCommandTaskHasNoDescription_RendersNoDescriptionLabel()
+    {
+        var tasks = new List<ScriptTask>
+        {
+            new("deploy", new[] { "dotnet publish", "gh release create" }, TaskType.Tool, null)
+        };
+
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.Enter);
+
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        Assert.NotNull(result);
+        Assert.Equal("deploy", result.Name);
+        Assert.Contains("deploy [tool] - <sem descrição>", console.Output);
+    }
+
+    [Fact]
+    public void SelectTask_WhenSingleCommandTaskHasNoDescription_RendersCommandAsDescription()
+    {
+        var tasks = new List<ScriptTask>
+        {
+            new("build", "dotnet build", TaskType.Tool, null)
+        };
+
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.Enter);
+
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        Assert.NotNull(result);
+        Assert.Equal("build", result.Name);
+        Assert.Contains("build [tool] - dotnet build", console.Output);
+    }
 }

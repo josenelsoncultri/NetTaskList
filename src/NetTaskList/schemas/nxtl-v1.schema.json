@@ -42,10 +42,28 @@
           "examples": ["build", "test", "watch", "seed-db"]
         },
         "command": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Comando do sistema operacional ou caminho de script C# a ser executado.",
-          "examples": ["dotnet build", "dotnet test", "scripts/clean.cs"]
+          "description": "Comando do sistema operacional ou caminho de script C# a ser executado, ou uma lista sequencial de comandos.",
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "description": "Comando único de execução."
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": "Lista sequencial de comandos a serem executados um por vez."
+            }
+          ],
+          "examples": [
+            "dotnet build",
+            ["dotnet clean", "dotnet build", "dotnet test"],
+            "scripts/clean.cs"
+          ]
         },
         "type": {
           "type": "string",

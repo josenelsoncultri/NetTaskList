@@ -81,32 +81,59 @@ public sealed class TaskExecutionCoordinator
         var badgeText = task.Type == TaskType.CSharp ? "csharp" : "tool";
         _console.MarkupLine($"Tarefa selecionada: [bold white]{Markup.Escape(task.Name)}[/] [[[{badgeColor}]{badgeText}[/]]]");
 
-        if (task.Type == TaskType.CSharp)
+        var resolvedCommands = task.ResolveExecutionCommands();
+        int totalCommands = resolvedCommands.Count;
+
+        for (int i = 0; i < totalCommands; i++)
         {
-            var rawCommand = task.Command.Trim();
-            if (rawCommand.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
-                !rawCommand.StartsWith("dotnet run", StringComparison.OrdinalIgnoreCase))
+            var rawCommand = task.Commands[i].Trim();
+            var commandLine = resolvedCommands[i];
+
+            if (task.Type == TaskType.CSharp)
             {
-                var fullScriptPath = _fileSystem.GetFullPath(rawCommand);
-                if (!_fileSystem.FileExists(fullScriptPath) && !_fileSystem.FileExists(rawCommand))
+                if (rawCommand.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
+                    !rawCommand.StartsWith("dotnet run", StringComparison.OrdinalIgnoreCase))
                 {
-                    _console.MarkupLine($"[bold red]Erro:[/] O arquivo de script C# '[yellow]{Markup.Escape(rawCommand)}[/]' não foi encontrado.");
-                    return 1;
+                    var fullScriptPath = _fileSystem.GetFullPath(rawCommand);
+                    if (!_fileSystem.FileExists(fullScriptPath) && !_fileSystem.FileExists(rawCommand))
+                    {
+                        _console.MarkupLine($"[bold red]Erro:[/] O arquivo de script C# '[yellow]{Markup.Escape(rawCommand)}[/]' não foi encontrado.");
+                        if (totalCommands > 1)
+                        {
+                            _console.MarkupLine($"[bold red]Execução interrompida:[/] Comandos posteriores não serão executados.");
+                        }
+                        return 1;
+                    }
                 }
+            }
+
+            if (totalCommands > 1)
+            {
+                _console.MarkupLine($"Comando [[{i + 1}/{totalCommands}]]: [bold yellow]{Markup.Escape(commandLine)}[/]");
+            }
+            else
+            {
+                _console.MarkupLine($"Comando: [bold yellow]{Markup.Escape(commandLine)}[/]");
+            }
+
+            var result = _executor.Execute(commandLine);
+
+            if (result.ErrorMessage != null)
+            {
+                _console.MarkupLine($"[bold red]Erro ao executar tarefa:[/] {Markup.Escape(result.ErrorMessage)}");
+            }
+
+            if (result.ExitCode != 0)
+            {
+                if (totalCommands > 1)
+                {
+                    _console.MarkupLine($"[bold red]Execução interrompida:[/] O comando falhou com código de saída {result.ExitCode}. Comandos posteriores não serão executados.");
+                }
+
+                return result.ExitCode;
             }
         }
 
-        var commandLine = task.ResolveExecutionCommand();
-        _console.MarkupLine($"Comando: [bold yellow]{Markup.Escape(commandLine)}[/]");
-
-        var result = _executor.Execute(commandLine);
-
-        if (result.ErrorMessage != null)
-        {
-            _console.MarkupLine($"[bold red]Erro ao executar tarefa:[/] {Markup.Escape(result.ErrorMessage)}");
-        }
-
-        return result.ExitCode;
+        return 0;
     }
 }
-

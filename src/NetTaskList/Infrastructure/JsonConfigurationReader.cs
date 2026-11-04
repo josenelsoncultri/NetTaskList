@@ -188,9 +188,13 @@ public sealed class JsonConfigurationReader
                     type = TaskType.CSharp;
                 }
 
+                var commands = dto.Commands != null && dto.Commands.Count > 0
+                    ? dto.Commands.Select(c => c.Trim()).ToList()
+                    : new List<string> { dto.Command?.Trim() ?? string.Empty };
+
                 tasks.Add(new ScriptTask(
                     dto.Name!.Trim(),
-                    dto.Command!.Trim(),
+                    commands,
                     type,
                     dto.Description));
             }
