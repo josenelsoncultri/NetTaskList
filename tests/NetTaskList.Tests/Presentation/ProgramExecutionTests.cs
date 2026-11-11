@@ -189,4 +189,136 @@ public class ProgramExecutionTests
         Assert.True(versionIndex >= 0, "Version header should be rendered.");
         Assert.True(promptIndex > versionIndex, "Version header should appear before the selection prompt.");
     }
+
+    [Fact]
+    public void Run_WithDirectToolTask_WhenUpdateAvailable_DisplaysAlertAtTopOfConsole()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile("nxtl.json", SampleConfig);
+        var executor = new MockProcessExecutor();
+        executor.EnqueueExitCode(0);
+        var console = new MockAnsiConsole();
+        var checker = new MockNugetVersionChecker(VersionCheckResult.UpdateAvailable("1.6.1", "1.7.0"));
+
+        // Act
+        var exitCode = Program.Run(["--run", "build"], fileSystem, executor, console, checker);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Nova versão disponível", console.Output);
+        Assert.Contains("1.6.1", console.Output);
+        Assert.Contains("1.7.0", console.Output);
+        Assert.Contains("dotnet tool update -g nettasklist", console.Output);
+
+        var alertIndex = console.Output.IndexOf("Nova versão disponível", StringComparison.Ordinal);
+        var taskExecutionIndex = console.Output.IndexOf("build", StringComparison.Ordinal);
+        Assert.True(alertIndex >= 0);
+        Assert.True(alertIndex < taskExecutionIndex, "Alert panel must be rendered at the very top before task execution.");
+    }
+
+    [Fact]
+    public void Run_InteractiveMode_WhenUpdateAvailable_DisplaysAlertAtTopOfConsoleBeforeHeader()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile("nxtl.json", SampleConfig);
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.Enter);
+        var checker = new MockNugetVersionChecker(VersionCheckResult.UpdateAvailable("1.6.1", "1.7.0"));
+
+        // Act
+        var exitCode = Program.Run([], fileSystem, executor, console, checker);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Nova versão disponível", console.Output);
+        Assert.Contains("1.6.1", console.Output);
+        Assert.Contains("1.7.0", console.Output);
+
+        var alertIndex = console.Output.IndexOf("Nova versão disponível", StringComparison.Ordinal);
+        var versionHeaderIndex = console.Output.IndexOf($"nxtl versão {AppVersion.Current}", StringComparison.Ordinal);
+        Assert.True(alertIndex >= 0);
+        Assert.True(alertIndex < versionHeaderIndex, "Alert panel must be rendered before the version header and task selector.");
+    }
+
+    [Fact]
+    public void Run_WhenInstalledVersionIsUpToDate_DoesNotDisplayAlert()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile("nxtl.json", SampleConfig);
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.DownArrow);
+        console.PushKey(ConsoleKey.Enter);
+        var checker = new MockNugetVersionChecker(VersionCheckResult.NoUpdate(AppVersion.Current));
+
+        // Act
+        var exitCode = Program.Run([], fileSystem, executor, console, checker);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("Nova versão disponível", console.Output);
+        Assert.DoesNotContain("dotnet tool update -g nettasklist", console.Output);
+    }
+
+    [Fact]
+    public void Run_WhenCheckerFails_DoesNotOutputErrorsAndExecutesNormally()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        fileSystem.AddFile("nxtl.json", SampleConfig);
+        var executor = new MockProcessExecutor();
+        executor.EnqueueExitCode(0);
+        var console = new MockAnsiConsole();
+        var checker = new MockNugetVersionChecker(VersionCheckResult.Failed(AppVersion.Current));
+
+        // Act
+        var exitCode = Program.Run(["--run", "build"], fileSystem, executor, console, checker);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("Nova versão disponível", console.Output);
+        Assert.DoesNotContain("Erro", console.Output);
+        Assert.Single(executor.ExecutedCommands);
+    }
+
+    [Fact]
+    public void Run_ShowVersion_DoesNotInvokeVersionChecker()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+        var checker = new MockNugetVersionChecker();
+
+        // Act
+        var exitCode = Program.Run(["--version"], fileSystem, executor, console, checker);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal(0, checker.CallCount);
+    }
+
+    [Fact]
+    public void Run_ShowHelp_DoesNotInvokeVersionChecker()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var executor = new MockProcessExecutor();
+        var console = new MockAnsiConsole();
+        var checker = new MockNugetVersionChecker();
+
+        // Act
+        var exitCode = Program.Run(["--help"], fileSystem, executor, console, checker);
+
+        // Assert
+        Assert.Equal(0, exitCode);
+        Assert.Equal(0, checker.CallCount);
+    }
 }

@@ -18,11 +18,13 @@ public static class Program
         string[] args,
         IFileSystem? fileSystem = null,
         IProcessExecutor? processExecutor = null,
-        IAnsiConsole? console = null)
+        IAnsiConsole? console = null,
+        INugetVersionChecker? nugetVersionChecker = null)
     {
         var fs = fileSystem ?? new FileSystem();
         var executor = processExecutor ?? new ProcessExecutor();
         var ansiConsole = console ?? AnsiConsole.Console;
+        var versionChecker = nugetVersionChecker ?? new NugetVersionChecker();
 
         var options = CommandLineParser.Parse(args);
 
@@ -43,6 +45,9 @@ public static class Program
             ansiConsole.MarkupLine($"[bold green]nxtl[/] versão [yellow]{Markup.Escape(AppVersion.Current)}[/]");
             return 0;
         }
+
+        var updateResult = versionChecker.CheckForUpdate(AppVersion.Current, TimeSpan.FromSeconds(2));
+        UpdateNotificationPresenter.Present(ansiConsole, updateResult);
 
         if (options.Init)
         {

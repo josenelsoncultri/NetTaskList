@@ -19,6 +19,7 @@ namespace NetTaskList.Infrastructure.Serialization;
 [JsonSerializable(typeof(PackageJsonDto))]
 [JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(List<string>))]
+[JsonSerializable(typeof(NugetPackageVersionsDto))]
 internal sealed partial class TaskJsonContext : JsonSerializerContext
 {
 }
