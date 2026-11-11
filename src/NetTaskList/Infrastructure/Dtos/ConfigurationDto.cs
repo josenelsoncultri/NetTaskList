@@ -22,13 +22,13 @@ public sealed class ScriptTaskDto
 
     [JsonPropertyName("command")]
     [JsonConverter(typeof(CommandPropertyJsonConverter))]
-    public List<string>? Commands { get; set; }
+    public List<TaskCommandDto>? Commands { get; set; }
 
     [JsonIgnore]
     public string? Command
     {
-        get => Commands != null && Commands.Count > 0 ? Commands[0] : null;
-        set => Commands = value == null ? null : new List<string> { value };
+        get => Commands != null && Commands.Count > 0 ? (Commands[0].IsShortcut ? $"task: {Commands[0].TargetTask}" : Commands[0].RawCommand) : null;
+        set => Commands = value == null ? null : new List<TaskCommandDto> { new TaskCommandDto { RawCommand = value } };
     }
 
     [JsonPropertyName("type")]

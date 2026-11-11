@@ -11,11 +11,17 @@ public sealed class ScriptTask
     }
 
     public ScriptTask(string name, IReadOnlyList<string> commands, TaskType type = TaskType.Tool, string? description = null)
+        : this(name, (commands ?? throw new ArgumentNullException(nameof(commands))).Select(TaskCommandStep.FromCommandLine).ToList(), type, description)
+    {
+    }
+
+    public ScriptTask(string name, IReadOnlyList<TaskCommandStep> commandSteps, TaskType type = TaskType.Tool, string? description = null)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
-        Commands = commands ?? throw new ArgumentNullException(nameof(commands));
+        CommandSteps = commandSteps ?? throw new ArgumentNullException(nameof(commandSteps));
         Type = type;
         Description = description;
+        Commands = CommandSteps.Select(s => s.ToString()).ToList();
     }
 
     /// <summary>
@@ -24,12 +30,17 @@ public sealed class ScriptTask
     public string Name { get; }
 
     /// <summary>
-    /// Raw commands specified in configuration.
+    /// Ordered steps specified in configuration (shell commands or task shortcuts).
+    /// </summary>
+    public IReadOnlyList<TaskCommandStep> CommandSteps { get; }
+
+    /// <summary>
+    /// Backwards-compatible raw commands or string representation of steps.
     /// </summary>
     public IReadOnlyList<string> Commands { get; }
 
     /// <summary>
-    /// Raw primary command or file path specified in configuration (returns first command or empty string).
+    /// Raw primary command or string representation (returns first command step or empty string).
     /// </summary>
     public string Command => Commands.Count > 0 ? Commands[0] : string.Empty;
 

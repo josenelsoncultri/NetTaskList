@@ -203,4 +203,116 @@ public class TaskExecutionCoordinatorTests
         Assert.Single(_executor.ExecutedCommands);
         Assert.Equal("dotnet build", _executor.ExecutedCommands[0]);
     }
+
+    [Fact]
+    public void Execute_SingleTaskShortcut_ResolvesAndExecutesTargetTaskWithStatusLine()
+    {
+        var taskA = new ScriptTask("say-hello", "echo hello from A", TaskType.Tool);
+        var taskB = new ScriptTask("cumprimentar", new[] { TaskCommandStep.FromShortcut("say-hello") }, TaskType.Tool);
+        var config = new TaskConfiguration("nxtl.json", new[] { taskA, taskB }, ConfigurationSourceType.NxtlJson);
+        var coordinator = new TaskExecutionCoordinator(_executor, _fileSystem, _console);
+
+        var exitCode = coordinator.Execute(taskB, config);
+
+        Assert.Equal(0, exitCode);
+        Assert.Single(_executor.ExecutedCommands);
+        Assert.Equal("echo hello from A", _executor.ExecutedCommands[0]);
+
+        var output = _console.Output;
+        Assert.Contains("Executando atalho:", output);
+        Assert.Contains("say-hello", output);
+        Assert.Contains("Comando:", output);
+        Assert.Contains("echo hello from A", output);
+    }
+
+    [Fact]
+    public void Execute_MixedSequentialCommandsAndShortcuts_ExecutesInExactOrder()
+    {
+        var subTask = new ScriptTask("sub-build", "dotnet build", TaskType.Tool);
+        var composite = new ScriptTask("pipeline", new[]
+        {
+            TaskCommandStep.FromCommandLine("echo start"),
+            TaskCommandStep.FromShortcut("sub-build"),
+            TaskCommandStep.FromCommandLine("echo finish")
+        }, TaskType.Tool);
+
+        var config = new TaskConfiguration("nxtl.json", new[] { subTask, composite }, ConfigurationSourceType.NxtlJson);
+        var coordinator = new TaskExecutionCoordinator(_executor, _fileSystem, _console);
+
+        var exitCode = coordinator.Execute(composite, config);
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(3, _executor.ExecutedCommands.Count);
+        Assert.Equal("echo start", _executor.ExecutedCommands[0]);
+        Assert.Equal("dotnet build", _executor.ExecutedCommands[1]);
+        Assert.Equal("echo finish", _executor.ExecutedCommands[2]);
+
+        var output = _console.Output;
+        Assert.Contains("Comando [1/3]:", output);
+        Assert.Contains("echo start", output);
+        Assert.Contains("Executando atalho:", output);
+        Assert.Contains("sub-build", output);
+        Assert.Contains("Comando [3/3]:", output);
+        Assert.Contains("echo finish", output);
+    }
+
+    [Fact]
+    public void Execute_ShortcutFails_AbortsRemainingCommandsAndPropagatesExitCode()
+    {
+        var subTask = new ScriptTask("sub-fail", "exit 42", TaskType.Tool);
+        var composite = new ScriptTask("pipeline", new[]
+        {
+            TaskCommandStep.FromCommandLine("echo start"),
+            TaskCommandStep.FromShortcut("sub-fail"),
+            TaskCommandStep.FromCommandLine("echo never")
+        }, TaskType.Tool);
+
+        var config = new TaskConfiguration("nxtl.json", new[] { subTask, composite }, ConfigurationSourceType.NxtlJson);
+        _executor.EnqueueExitCode(0);  // echo start
+        _executor.EnqueueExitCode(42); // sub-fail
+        var coordinator = new TaskExecutionCoordinator(_executor, _fileSystem, _console);
+
+        var exitCode = coordinator.Execute(composite, config);
+
+        Assert.Equal(42, exitCode);
+        Assert.Equal(2, _executor.ExecutedCommands.Count);
+        Assert.Equal("echo start", _executor.ExecutedCommands[0]);
+        Assert.Equal("exit 42", _executor.ExecutedCommands[1]);
+        Assert.DoesNotContain("echo never", _executor.ExecutedCommands);
+        Assert.Contains("Execução interrompida:", _console.Output);
+        Assert.Contains("42", _console.Output);
+    }
+
+    [Fact]
+    public void Execute_MissingReferencedTask_HaltsWithExitCode1AndPortugueseMessage()
+    {
+        var task = new ScriptTask("caller", new[] { TaskCommandStep.FromShortcut("missing-target") }, TaskType.Tool);
+        var config = new TaskConfiguration("nxtl.json", new[] { task }, ConfigurationSourceType.NxtlJson);
+        var coordinator = new TaskExecutionCoordinator(_executor, _fileSystem, _console);
+
+        var exitCode = coordinator.Execute(task, config);
+
+        Assert.Equal(1, exitCode);
+        Assert.Empty(_executor.ExecutedCommands);
+        Assert.Contains("A tarefa referenciada", _console.Output);
+        Assert.Contains("missing-target", _console.Output);
+        Assert.Contains("não foi encontrada", _console.Output);
+    }
+
+    [Fact]
+    public void Execute_ReferencingCSharpTask_HaltsWithExitCode1AndPortugueseMessage()
+    {
+        var csharpTask = new ScriptTask("script-cs", "scripts/test.cs", TaskType.CSharp);
+        var callerTask = new ScriptTask("caller", new[] { TaskCommandStep.FromShortcut("script-cs") }, TaskType.Tool);
+        var config = new TaskConfiguration("nxtl.json", new[] { csharpTask, callerTask }, ConfigurationSourceType.NxtlJson);
+        var coordinator = new TaskExecutionCoordinator(_executor, _fileSystem, _console);
+
+        var exitCode = coordinator.Execute(callerTask, config);
+
+        Assert.Equal(1, exitCode);
+        Assert.Empty(_executor.ExecutedCommands);
+        Assert.Contains("tenta referenciar", _console.Output);
+        Assert.Contains("script-cs", _console.Output);
+        Assert.Contains("que é um script C#", _console.Output);
+    }
 }

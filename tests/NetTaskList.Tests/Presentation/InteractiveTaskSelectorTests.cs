@@ -278,4 +278,22 @@ public class InteractiveTaskSelectorTests
         Assert.Equal("build", result.Name);
         Assert.Contains("build [tool] - dotnet build", console.Output);
     }
+
+    [Fact]
+    public void SelectTask_WhenSingleShortcutTaskHasNoDescription_RendersAtalhoTargetName()
+    {
+        var tasks = new List<ScriptTask>
+        {
+            new("compilar", new[] { TaskCommandStep.FromShortcut("build") }, TaskType.Tool, null)
+        };
+
+        var console = new MockAnsiConsole();
+        console.PushKey(ConsoleKey.Enter);
+
+        var result = InteractiveTaskSelector.SelectTask(tasks, console);
+
+        Assert.NotNull(result);
+        Assert.Equal("compilar", result.Name);
+        Assert.Contains("compilar [tool] - atalho: build", console.Output);
+    }
 }

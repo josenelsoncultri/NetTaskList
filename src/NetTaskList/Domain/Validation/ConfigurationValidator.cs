@@ -50,6 +50,8 @@ public sealed class ConfigurationValidator : IConfigurationValidator
             }
 
             var displayName = string.IsNullOrWhiteSpace(task.Name) ? $"índice [{i}]" : task.Name.Trim();
+            var isCSharpType = !string.IsNullOrWhiteSpace(task.Type) &&
+                               task.Type.Trim().Equals("csharp", StringComparison.OrdinalIgnoreCase);
 
             // VR-003: Command is required
             if (task.Commands == null || task.Commands.Count == 0)
@@ -60,19 +62,45 @@ public sealed class ConfigurationValidator : IConfigurationValidator
             }
             else
             {
-                if (task.Commands.Any(string.IsNullOrWhiteSpace))
+                for (int stepIndex = 0; stepIndex < task.Commands.Count; stepIndex++)
                 {
-                    if (task.Commands.Count == 1)
+                    var step = task.Commands[stepIndex];
+
+                    if (step.IsShortcut)
                     {
-                        errors.Add(new ValidationError(
-                            nameof(task.Command),
-                            $"A tarefa '{displayName}' não define um comando a ser executado."));
+                        // VR-005: Shortcuts are forbidden in C# tasks
+                        if (isCSharpType)
+                        {
+                            errors.Add(new ValidationError(
+                                nameof(task.Command),
+                                $"A tarefa '{displayName}' é do tipo 'csharp' e não pode conter atalhos para outras tarefas."));
+                        }
+
+                        // VR-006: Target task cannot be empty
+                        if (string.IsNullOrWhiteSpace(step.TargetTask))
+                        {
+                            errors.Add(new ValidationError(
+                                nameof(task.Command),
+                                $"A tarefa '{displayName}' possui um atalho com nome de tarefa vazio."));
+                        }
                     }
                     else
                     {
-                        errors.Add(new ValidationError(
-                            nameof(task.Command),
-                            $"A tarefa '{displayName}' possui um comando vazio ou inválido na lista de comandos."));
+                        if (string.IsNullOrWhiteSpace(step.RawCommand))
+                        {
+                            if (task.Commands.Count == 1)
+                            {
+                                errors.Add(new ValidationError(
+                                    nameof(task.Command),
+                                    $"A tarefa '{displayName}' não define um comando a ser executado."));
+                            }
+                            else
+                            {
+                                errors.Add(new ValidationError(
+                                    nameof(task.Command),
+                                    $"A tarefa '{displayName}' possui um comando vazio ou inválido na lista de comandos."));
+                            }
+                        }
                     }
                 }
             }

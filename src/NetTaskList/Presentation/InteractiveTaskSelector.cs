@@ -71,9 +71,13 @@ public static class InteractiveTaskSelector
             {
                 description = task.Description;
             }
-            else if (task.Commands.Count > 1)
+            else if (task.CommandSteps.Count > 1)
             {
                 description = "<sem descrição>";
+            }
+            else if (task.CommandSteps.Count == 1 && task.CommandSteps[0].IsShortcut)
+            {
+                description = $"atalho: {task.CommandSteps[0].TargetTaskName}";
             }
             else
             {

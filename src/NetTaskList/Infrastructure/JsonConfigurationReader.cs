@@ -188,13 +188,29 @@ public sealed class JsonConfigurationReader
                     type = TaskType.CSharp;
                 }
 
-                var commands = dto.Commands != null && dto.Commands.Count > 0
-                    ? dto.Commands.Select(c => c.Trim()).ToList()
-                    : new List<string> { dto.Command?.Trim() ?? string.Empty };
+                var steps = new List<TaskCommandStep>();
+                if (dto.Commands != null && dto.Commands.Count > 0)
+                {
+                    foreach (var cmdDto in dto.Commands)
+                    {
+                        if (cmdDto.IsShortcut)
+                        {
+                            steps.Add(TaskCommandStep.FromShortcut(cmdDto.TargetTask!.Trim()));
+                        }
+                        else
+                        {
+                            steps.Add(TaskCommandStep.FromCommandLine(cmdDto.RawCommand!.Trim()));
+                        }
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(dto.Command))
+                {
+                    steps.Add(TaskCommandStep.FromCommandLine(dto.Command.Trim()));
+                }
 
                 tasks.Add(new ScriptTask(
                     dto.Name!.Trim(),
-                    commands,
+                    steps,
                     type,
                     dto.Description));
             }

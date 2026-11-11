@@ -14,6 +14,8 @@ namespace NetTaskList.Infrastructure.Serialization;
 [JsonSerializable(typeof(ConfigurationDto))]
 [JsonSerializable(typeof(List<ScriptTaskDto>))]
 [JsonSerializable(typeof(ScriptTaskDto))]
+[JsonSerializable(typeof(TaskCommandDto))]
+[JsonSerializable(typeof(List<TaskCommandDto>))]
 [JsonSerializable(typeof(PackageJsonDto))]
 [JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(List<string>))]

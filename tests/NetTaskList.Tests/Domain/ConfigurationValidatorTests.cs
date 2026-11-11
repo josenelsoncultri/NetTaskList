@@ -32,7 +32,12 @@ public class ConfigurationValidatorTests
             new()
             {
                 Name = "pipeline",
-                Commands = new List<string> { "dotnet clean", "dotnet build", "dotnet test" },
+                Commands = new List<TaskCommandDto>
+                {
+                    new() { RawCommand = "dotnet clean" },
+                    new() { RawCommand = "dotnet build" },
+                    new() { RawCommand = "dotnet test" }
+                },
                 Type = "tool"
             }
         };
@@ -44,11 +49,79 @@ public class ConfigurationValidatorTests
     }
 
     [Fact]
+    public void Validate_ValidShortcutInToolTask_ReturnsSuccess()
+    {
+        var tasks = new List<ScriptTaskDto>
+        {
+            new()
+            {
+                Name = "compilar",
+                Commands = new List<TaskCommandDto>
+                {
+                    new() { TargetTask = "build" }
+                },
+                Type = "tool"
+            }
+        };
+
+        var result = _validator.Validate(tasks);
+
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public void Validate_ShortcutInCSharpTask_ReturnsError()
+    {
+        var tasks = new List<ScriptTaskDto>
+        {
+            new()
+            {
+                Name = "script-cs",
+                Commands = new List<TaskCommandDto>
+                {
+                    new() { TargetTask = "build" }
+                },
+                Type = "csharp"
+            }
+        };
+
+        var result = _validator.Validate(tasks);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == "Command" && e.Message.Contains("é do tipo 'csharp' e não pode conter atalhos"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Validate_ShortcutWithEmptyTarget_ReturnsError(string emptyTarget)
+    {
+        var tasks = new List<ScriptTaskDto>
+        {
+            new()
+            {
+                Name = "atalho-vazio",
+                Commands = new List<TaskCommandDto>
+                {
+                    new() { TargetTask = emptyTarget }
+                },
+                Type = "tool"
+            }
+        };
+
+        var result = _validator.Validate(tasks);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == "Command" && e.Message.Contains("possui um atalho com nome de tarefa vazio"));
+    }
+
+    [Fact]
     public void Validate_EmptyCommandsArray_ReturnsError()
     {
         var tasks = new List<ScriptTaskDto>
         {
-            new() { Name = "empty-cmds", Commands = new List<string>() }
+            new() { Name = "empty-cmds", Commands = new List<TaskCommandDto>() }
         };
 
         var result = _validator.Validate(tasks);
@@ -65,7 +138,12 @@ public class ConfigurationValidatorTests
             new()
             {
                 Name = "partial-empty",
-                Commands = new List<string> { "dotnet build", "   ", "dotnet test" }
+                Commands = new List<TaskCommandDto>
+                {
+                    new() { RawCommand = "dotnet build" },
+                    new() { RawCommand = "   " },
+                    new() { RawCommand = "dotnet test" }
+                }
             }
         };
 
