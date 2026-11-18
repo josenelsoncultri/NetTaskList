@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>nxtl</ToolCommandName>
     <PackageId>NetTaskList</PackageId>
-    <Version>1.7.0</Version>
+    <Version>2.0.0</Version>
     <Description>CLI tool to parse, list and execute tasks declared in nxtl.json</Description>
     <Authors>NetTaskList Team</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -18,9 +18,10 @@
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <EnableAotAnalyzer>true</EnableAotAnalyzer>
+
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>

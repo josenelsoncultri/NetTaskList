@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Versão do pacote (ex: 1.0.1). Se omitido, usa a versão da release ou do .csproj.'
+        description: 'Versão do pacote (ex: 1.7.0). Se omitido, usa a versão da release ou do .csproj.'
         required: false
         type: string
 
@@ -15,11 +15,22 @@ permissions:
   id-token: write # Obrigatório para autenticação OIDC (Trusted Publishing)
 
 jobs:
-  publish:
-    name: Build, Test & Publish
-    runs-on: ubuntu-latest
-    # Se você configurou um Environment no NuGet.org (opcional), descomente a linha abaixo:
-    environment: production
+  build-and-pack:
+    name: Build & Pack (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            run-tests: true
+          - os: windows-latest
+            rid: win-x64
+            run-tests: false
+          - os: macos-latest
+            rid: osx-arm64
+            run-tests: false
 
     steps:
       - name: Checkout repository
@@ -28,7 +39,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '11.0.x'
 
       - name: Extrair / Definir Versão do Pacote
         id: version
@@ -39,7 +50,6 @@ jobs:
             echo "Usando versão informada manualmente: ${{ inputs.version }}"
           elif [ "${{ github.event_name }}" = "release" ]; then
             TAG="${{ github.event.release.tag_name }}"
-            # Remove o prefixo 'v' se existir (ex: v1.0.0 -> 1.0.0)
             CLEAN_VERSION="${TAG#v}"
             echo "version=$CLEAN_VERSION" >> "$GITHUB_OUTPUT"
             echo "Usando versão extraída da release: $CLEAN_VERSION"
@@ -48,39 +58,111 @@ jobs:
             echo "Usando versão padrão definida no .csproj"
           fi
 
-      - name: Restaurar dependências
-        run: dotnet restore NetTaskList.sln
-
-      - name: Compilar solução
-        run: |
-          if [ -n "${{ steps.version.outputs.version }}" ]; then
-            dotnet build NetTaskList.sln --configuration Release -p:Version="${{ steps.version.outputs.version }}" --no-restore
-          else
-            dotnet build NetTaskList.sln --configuration Release --no-restore
-          fi
-
       - name: Executar testes
-        run: dotnet test NetTaskList.sln --configuration Release --no-build --verbosity normal
+        if: matrix.run-tests
+        run: dotnet test NetTaskList.sln --configuration Release
 
-      - name: Empacotar ferramenta (dotnet tool)
+      - name: Empacotar subpacote nativo (${{ matrix.rid }})
+        shell: bash
         run: |
+          VERSION_ARGS=""
           if [ -n "${{ steps.version.outputs.version }}" ]; then
-            dotnet pack src/NetTaskList/NetTaskList.csproj --configuration Release --no-build --output ./nupkg -p:PackageVersion="${{ steps.version.outputs.version }}"
-          else
-            dotnet pack src/NetTaskList/NetTaskList.csproj --configuration Release --no-build --output ./nupkg
+            VERSION_ARGS="-p:Version=${{ steps.version.outputs.version }} -p:PackageVersion=${{ steps.version.outputs.version }}"
           fi
+
+          # RuntimeIdentifier (singular) gera apenas o .nupkg específico da plataforma atual
+          dotnet pack src/NetTaskList/NetTaskList.csproj \
+            --configuration Release \
+            --output ./nupkg \
+            -p:RuntimeIdentifier=${{ matrix.rid }} \
+            $VERSION_ARGS
+
+      - name: Upload do subpacote gerado
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg-${{ matrix.rid }}
+          path: ./nupkg/*.nupkg
+          if-no-files-found: error
+
+  publish:
+    name: Pack Main & Publish to NuGet
+    needs: build-and-pack
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+
+      - name: Extrair / Definir Versão do Pacote
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Baixar subpacotes nativos das plataformas
+        uses: actions/download-artifact@v4
+        with:
+          path: ./nupkg/rid-packages
+          merge-multiple: true
+
+      - name: Gerar pacote principal (manifesto unificado)
+        shell: bash
+        run: |
+          VERSION_ARGS=""
+          if [ -n "${{ steps.version.outputs.version }}" ]; then
+            VERSION_ARGS="-p:Version=${{ steps.version.outputs.version }} -p:PackageVersion=${{ steps.version.outputs.version }}"
+          fi
+
+          # Gera o pacote principal (ponteiro) listando win-x64, linux-x64 e osx-arm64
+          # PublishAot=false aqui evita tentar cross-compilar os binários nativos de outros SOs
+          dotnet pack src/NetTaskList/NetTaskList.csproj \
+            --configuration Release \
+            --output ./nupkg/main \
+            -p:PublishAot=false \
+            $VERSION_ARGS
+
+          # Remove eventuais duplicatas de RID geradas pelo empacotamento do pacote principal
+          rm -f ./nupkg/main/*-x64.*.nupkg ./nupkg/main/*-arm64.*.nupkg
 
       - name: Autenticar no NuGet via OIDC (Trusted Publishing)
         uses: NuGet/login@v1
         id: login
         with:
-          # Substitua 'josenelsoncultri' pelo seu nome de usuário/organização no NuGet.org
-          # ou crie a variável em Settings > Secrets and variables > Actions > Variables: NUGET_USERNAME
           user: ${{ vars.NUGET_USERNAME || 'josenelsoncultri' }}
 
-      - name: Publicar pacote no NuGet.org
+      - name: Publicar pacotes no NuGet.org na ordem correta
+        shell: bash
         run: |
-          dotnet nuget push ./nupkg/*.nupkg \
-            --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
-            --source https://api.nuget.org/v3/index.json \
-            --skip-duplicate
+          API_KEY="${{ steps.login.outputs.NUGET_API_KEY }}"
+          SOURCE="https://api.nuget.org/v3/index.json"
+
+          # 1. Publica primeiro todos os subpacotes específicos de plataforma
+          for pkg in ./nupkg/rid-packages/*.nupkg; do
+            echo "Publicando subpacote: $pkg"
+            dotnet nuget push "$pkg" \
+              --api-key "$API_KEY" \
+              --source "$SOURCE" \
+              --skip-duplicate
+          done
+
+          # 2. Publica por último o pacote principal que aponta para os anteriores
+          for main_pkg in ./nupkg/main/*.nupkg; do
+            echo "Publicando pacote principal: $main_pkg"
+            dotnet nuget push "$main_pkg" \
+              --api-key "$API_KEY" \
+              --source "$SOURCE" \
+              --skip-duplicate
+          done

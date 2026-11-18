@@ -20,6 +20,16 @@
       "command": "find . -type d \\( -name \"bin\" -o -name \"obj\" \\) -exec rm -rf {} +",
       "type": "tool",
       "description": "Exclui as pastas bin e obj da solução, no Linux, de maneira recursiva"
+    },
+    {
+      "name": "build",
+      "command": [
+        "dotnet clean",
+        "dotnet restore",
+        "dotnet build -c Release"
+      ],
+      "type": "tool",
+      "description": "Realiza a compilação da ferramenta sem atualizar o github ou rodar o github workflow para subir ao Nuget"
     }
   ]
 }
